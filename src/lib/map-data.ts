@@ -194,3 +194,79 @@ export function generateMap(playerCount: number): GeneratedMap {
 export function getSupportedPlayerCounts() {
   return [3, 4, 5, 6];
 }
+
+// ── Tile lookup ────────────────────────────────────────────────
+
+const ALL_TILES: SystemTile[] = [MECATOL, HOME_TILE, ...BLUE_TILES, ...RED_TILES];
+
+function findTileById(id: number): SystemTile {
+  return ALL_TILES.find((t) => t.id === id) || { id, name: `Tile ${id}`, resources: 0, influence: 0, type: "empty" };
+}
+
+// ── Parse map string ───────────────────────────────────────────
+
+export function parseMapString(input: string): GeneratedMap {
+  // Accept space, comma, or semicolon separators
+  const ids = input
+    .trim()
+    .split(/[\s,;]+/)
+    .map((s) => parseInt(s, 10))
+    .filter((n) => !isNaN(n));
+
+  if (ids.length === 0) throw new Error("No valid tile IDs found.");
+
+  // First ID is always Mecatol (center) — skip it for ring tiles
+  const ringTileIds = ids[0] === 18 ? ids.slice(1) : ids;
+
+  // Determine player count from tile count
+  let playerCount: number;
+  let maxRing: number;
+  if (ringTileIds.length <= 18) {
+    // 3-player: 18 ring positions (6 ring1 + 12 ring2)
+    playerCount = 3;
+    maxRing = 2;
+  } else if (ringTileIds.length <= 36) {
+    // 6-player: 36 ring positions (6 ring1 + 12 ring2 + 18 ring3)
+    playerCount = 6;
+    maxRing = 3;
+  } else {
+    throw new Error(`Unexpected tile count: ${ringTileIds.length}. Expected 18 (3p) or 36 (6p).`);
+  }
+
+  const config = HOME_CONFIGS[playerCount];
+  if (!config) throw new Error(`No layout config for ${playerCount} players.`);
+  const { homes } = config;
+
+  // Generate all ring positions in spiral order (matching standard TI4 map string order)
+  const ringPositions: HexCoord[] = [];
+  for (let r = 1; r <= maxRing; r++) ringPositions.push(...generateRing(r));
+
+  if (ringTileIds.length > ringPositions.length) {
+    throw new Error(`Too many tiles (${ringTileIds.length}) for a ${maxRing}-ring map (${ringPositions.length} positions).`);
+  }
+
+  const homeSet = new Set(homes.map(([q, r]) => hexKey(q, r)));
+
+  // Build hexes
+  const hexes: MapHex[] = [{ q: 0, r: 0, sliceIndex: -1, tile: MECATOL, isHome: false, isCenter: true }];
+
+  ringPositions.forEach(([q, r], i) => {
+    const tileId = i < ringTileIds.length ? ringTileIds[i] : 47; // fallback to empty
+    const isHome = homeSet.has(hexKey(q, r)) || tileId === 0;
+    const tile = isHome ? HOME_TILE : findTileById(tileId);
+    const sliceIndex = getSliceIndex(q, r, homes);
+    hexes.push({ q, r, sliceIndex, tile, isHome, isCenter: false });
+  });
+
+  // Slice stats
+  const sliceStats = Array.from({ length: playerCount }, (_, i) => {
+    const sh = hexes.filter((h) => h.sliceIndex === i && !h.isHome);
+    return {
+      resources: sh.reduce((s, h) => s + h.tile.resources, 0),
+      influence: sh.reduce((s, h) => s + h.tile.influence, 0),
+      tileCount: sh.length,
+    };
+  });
+
+  return { playerCount, hexes, sliceStats };
+}

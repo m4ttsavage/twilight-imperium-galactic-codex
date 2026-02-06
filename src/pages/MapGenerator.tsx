@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Map, RefreshCw, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { generateMap, getSupportedPlayerCounts, type GeneratedMap } from "@/lib/map-data";
+import ImportMapDialog from "@/components/map/ImportMapDialog";
 import { TI4_FACTIONS } from "@/lib/factions";
 import HexMapBoard from "@/components/map/HexMapBoard";
 import SlicePanel from "@/components/map/SlicePanel";
@@ -133,13 +134,21 @@ const MapGenerator = () => {
                 {n}p
               </button>
             ))}
-            <button
-              onClick={handleGenerate}
-              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider"
-            >
-              <RefreshCw className="w-3 h-3" />
-              Regenerate
-            </button>
+            <div className="ml-auto flex items-center gap-2">
+              <ImportMapDialog onImport={(imported) => {
+                setPlayerCount(imported.playerCount);
+                setMap(imported);
+                setSliceFactions(Array(imported.playerCount).fill(null));
+                setSliceNicknames(Array(imported.playerCount).fill(""));
+              }} />
+              <button
+                onClick={handleGenerate}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Regenerate
+              </button>
+            </div>
           </div>
         </motion.header>
 
