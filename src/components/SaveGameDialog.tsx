@@ -17,6 +17,8 @@ interface Props {
 }
 
 interface PlayerResult {
+  email: string;
+  name: string;
   placement: string;
   victoryPoints: string;
 }
@@ -27,7 +29,12 @@ const SaveGameDialog = ({ map, sliceFactions, sliceNicknames }: Props) => {
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [results, setResults] = useState<PlayerResult[]>(
-    () => Array(map.playerCount).fill(null).map(() => ({ placement: "", victoryPoints: "" }))
+    () => Array.from({ length: map.playerCount }, (_, i) => ({
+      email: "",
+      name: sliceNicknames[i] || "",
+      placement: "",
+      victoryPoints: "",
+    }))
   );
 
   if (!user) return null;
@@ -40,7 +47,13 @@ const SaveGameDialog = ({ map, sliceFactions, sliceNicknames }: Props) => {
     });
   };
 
+  const allEmailsValid = results.every((r) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email.trim()));
+
   const handleSave = async () => {
+    if (!allEmailsValid) {
+      toast.error("Please enter a valid email for each player");
+      return;
+    }
     setSaving(true);
     try {
       const mapString = exportMapString(map);
@@ -62,7 +75,8 @@ const SaveGameDialog = ({ map, sliceFactions, sliceNicknames }: Props) => {
         game_id: game.id,
         slice_index: i,
         faction_name: sliceFactions[i] || null,
-        nickname: sliceNicknames[i] || null,
+        nickname: results[i].name || null,
+        email: results[i].email || null,
         placement: results[i].placement ? parseInt(results[i].placement) : null,
         victory_points: results[i].victoryPoints ? parseInt(results[i].victoryPoints) : null,
       }));
@@ -76,7 +90,7 @@ const SaveGameDialog = ({ map, sliceFactions, sliceNicknames }: Props) => {
       toast.success("Game saved!");
       setOpen(false);
       setNotes("");
-      setResults(Array(map.playerCount).fill(null).map(() => ({ placement: "", victoryPoints: "" })));
+      setResults(Array.from({ length: map.playerCount }, () => ({ email: "", name: "", placement: "", victoryPoints: "" })));
     } catch (err: any) {
       toast.error(err.message || "Failed to save game");
     } finally {
@@ -111,8 +125,30 @@ const SaveGameDialog = ({ map, sliceFactions, sliceNicknames }: Props) => {
                   Slice {i + 1}
                 </span>
                 <span className="text-xs font-body text-foreground truncate flex-1">
-                  {sliceFactions[i] || "Unassigned"}{sliceNicknames[i] ? ` — ${sliceNicknames[i]}` : ""}
+                  {sliceFactions[i] || "Unassigned"}
                 </span>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-[2] space-y-1">
+                  <Label className="text-[9px] font-display uppercase tracking-wider text-muted-foreground">Email *</Label>
+                  <Input
+                    type="email"
+                    placeholder="player@example.com"
+                    value={results[i].email}
+                    onChange={(e) => updateResult(i, "email", e.target.value)}
+                    className="h-8 text-xs bg-muted/30 border-border"
+                    required
+                  />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <Label className="text-[9px] font-display uppercase tracking-wider text-muted-foreground">Name</Label>
+                  <Input
+                    placeholder="Optional"
+                    value={results[i].name}
+                    onChange={(e) => updateResult(i, "name", e.target.value)}
+                    className="h-8 text-xs bg-muted/30 border-border"
+                  />
+                </div>
               </div>
               <div className="flex gap-3">
                 <div className="flex-1 space-y-1">
@@ -156,7 +192,7 @@ const SaveGameDialog = ({ map, sliceFactions, sliceNicknames }: Props) => {
         <DialogFooter>
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || !allEmailsValid}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold/20 border border-gold/30 text-gold hover:bg-gold/30 transition-colors text-xs font-display uppercase tracking-wider disabled:opacity-50"
           >
             <Save className="w-3.5 h-3.5" />
