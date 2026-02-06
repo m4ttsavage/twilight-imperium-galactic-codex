@@ -13,6 +13,7 @@ import SlicePanel from "@/components/map/SlicePanel";
 import SystemBankSelector from "@/components/map/SystemBankSelector";
 import BalanceDropdown from "@/components/map/BalanceDropdown";
 import FactionPickerDialog from "@/components/map/FactionPickerDialog";
+import MapLegend from "@/components/map/MapLegend";
 import FloatingChat from "@/components/FloatingChat";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -274,7 +275,7 @@ const MapGenerator = () => {
               className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:items-start"
             >
               {/* Map — takes more space on desktop */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 space-y-3">
                 <div className="rounded-xl border border-border bg-card/40 p-2 overflow-hidden">
                   <HexMapBoard
                     map={map}
@@ -283,6 +284,7 @@ const MapGenerator = () => {
                     onHomeClick={handleHomeClick}
                   />
                 </div>
+                <MapLegend />
               </div>
 
               {/* Slice panel — sidebar on desktop */}
