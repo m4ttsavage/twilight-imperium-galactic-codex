@@ -206,11 +206,12 @@ function getSliceIndex(q: number, r: number, homes: HexCoord[]): number {
 
 // ── Layout configs ─────────────────────────────────────────────
 
+// Homes ordered: first position at 12 o'clock, then clockwise
 const HOME_CONFIGS: Record<number, { maxRing: number; homes: HexCoord[] }> = {
-  3: { maxRing: 2, homes: [[2, 0], [-2, 2], [0, -2]] },
-  4: { maxRing: 3, homes: [[3, 0], [-1, 3], [-3, 0], [1, -3]] },
-  5: { maxRing: 3, homes: [[3, 0], [0, 3], [-3, 2], [-1, -2], [2, -3]] },
-  6: { maxRing: 3, homes: [[3, 0], [0, 3], [-3, 3], [-3, 0], [0, -3], [3, -3]] },
+  3: { maxRing: 2, homes: [[0, -2], [2, 0], [-2, 2]] },
+  4: { maxRing: 3, homes: [[1, -3], [3, 0], [-1, 3], [-3, 0]] },
+  5: { maxRing: 3, homes: [[-1, -2], [2, -3], [3, 0], [0, 3], [-3, 2]] },
+  6: { maxRing: 3, homes: [[0, -3], [3, -3], [3, 0], [0, 3], [-3, 3], [-3, 0]] },
 };
 
 // ── Shuffle ────────────────────────────────────────────────────
