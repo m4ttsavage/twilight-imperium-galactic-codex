@@ -254,6 +254,12 @@ function TechBadge({ x, y, tech, size = 3.5 }: { x: number; y: number; tech: Tec
 const HexTileGraphics = ({ tile, x, y, hexSize, isCenter, isHome }: HexTileGraphicsProps) => {
   if (isCenter || isHome) return null;
 
+  const tileIdLabel = tile.id > 0 ? (
+    <text x={x} y={y + hexSize * 0.78} textAnchor="middle" fill="#556677" fontSize={5} fontFamily="Rajdhani" opacity={0.5}>
+      {tile.id}
+    </text>
+  ) : null;
+
   const graphicSize = hexSize * 0.7;
 
   // Planet tiles
@@ -278,6 +284,7 @@ const HexTileGraphics = ({ tile, x, y, hexSize, isCenter, isHome }: HexTileGraph
         {tile.planets && tile.wormhole && (
           <WormholeLabel x={x} y={y + (tile.planets.length === 3 ? 25 : 22)} wormhole={tile.wormhole} />
         )}
+        {tileIdLabel}
       </g>
     );
   }
@@ -300,6 +307,7 @@ const HexTileGraphics = ({ tile, x, y, hexSize, isCenter, isHome }: HexTileGraph
            tile.anomaly}
         </text>
         {tile.wormhole && <WormholeLabel x={x} y={y + graphicSize * 1.2} wormhole={tile.wormhole} />}
+        {tileIdLabel}
       </g>
     );
   }
@@ -312,6 +320,7 @@ const HexTileGraphics = ({ tile, x, y, hexSize, isCenter, isHome }: HexTileGraph
         <text x={x} y={y + graphicSize * 0.7} textAnchor="middle" fill={tile.wormhole === "α" ? "#6699ff" : "#ff9944"} fontSize={7} fontFamily="Rajdhani" fontWeight={500}>
           {tile.wormhole}
         </text>
+        {tileIdLabel}
       </g>
     );
   }
@@ -324,6 +333,7 @@ const HexTileGraphics = ({ tile, x, y, hexSize, isCenter, isHome }: HexTileGraph
         <circle cx={x - 5} cy={y - 3} r={0.4} fill="#334455" opacity={0.4} />
         <circle cx={x + 7} cy={y + 2} r={0.3} fill="#334455" opacity={0.3} />
         <circle cx={x + 2} cy={y - 6} r={0.35} fill="#334455" opacity={0.35} />
+        {tileIdLabel}
       </g>
     );
   }
