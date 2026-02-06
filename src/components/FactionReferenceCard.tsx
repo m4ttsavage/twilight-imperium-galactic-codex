@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Shield,
   Cpu,
   Users,
   Swords,
@@ -12,6 +11,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import type { FactionDetail } from "@/lib/faction-details";
+import { TI4_FACTIONS } from "@/lib/factions";
 
 interface FactionReferenceCardProps {
   faction: FactionDetail;
@@ -45,14 +45,12 @@ const FactionReferenceCard = ({ faction }: FactionReferenceCardProps) => {
         onClick={() => setExpanded(!expanded)}
         className="w-full text-left p-4 flex items-start gap-3"
       >
-        <div
-          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border"
-          style={{
-            backgroundColor: faction.color + "20",
-            borderColor: faction.color + "60",
-          }}
-        >
-          <Shield className="w-5 h-5" style={{ color: faction.color }} />
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+          <img
+            src={TI4_FACTIONS.find((f) => f.name === faction.name)?.icon}
+            alt={faction.shortName}
+            className="w-8 h-8 object-contain"
+          />
         </div>
 
         <div className="flex-1 min-w-0">

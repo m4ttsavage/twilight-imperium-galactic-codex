@@ -56,7 +56,15 @@ const FactionSelector = ({
         className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-muted/40 border border-border hover:border-gold/30 transition-colors"
       >
         <div className="flex items-center gap-2 min-w-0">
-          <Shield className="w-4 h-4 text-gold flex-shrink-0" />
+          {selectedFactionData ? (
+            <img
+              src={selectedFactionData.icon}
+              alt={selectedFactionData.shortName}
+              className="w-5 h-5 object-contain flex-shrink-0"
+            />
+          ) : (
+            <Shield className="w-4 h-4 text-gold flex-shrink-0" />
+          )}
           <span className="text-sm font-body text-foreground truncate">
             {selectedFaction ? formatLabel(selectedFaction) : "Set up your game"}
           </span>
@@ -319,14 +327,12 @@ function FactionRow({
           : "bg-transparent border border-transparent hover:bg-muted/40"
       }`}
     >
-      <div
-        className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 border"
-        style={{
-          backgroundColor: faction.color + "20",
-          borderColor: faction.color + "50",
-        }}
-      >
-        <Shield className="w-3.5 h-3.5" style={{ color: faction.color }} />
+      <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <img
+          src={faction.icon}
+          alt={faction.shortName}
+          className="w-5 h-5 object-contain"
+        />
       </div>
       <span
         className={`text-[12px] font-body font-medium truncate ${
