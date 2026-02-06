@@ -16,29 +16,35 @@ export type Database = {
     Tables: {
       game_players: {
         Row: {
+          email: string | null
           faction_name: string | null
           game_id: string
           id: string
           nickname: string | null
           placement: number | null
+          player_user_id: string | null
           slice_index: number
           victory_points: number | null
         }
         Insert: {
+          email?: string | null
           faction_name?: string | null
           game_id: string
           id?: string
           nickname?: string | null
           placement?: number | null
+          player_user_id?: string | null
           slice_index: number
           victory_points?: number | null
         }
         Update: {
+          email?: string | null
           faction_name?: string | null
           game_id?: string
           id?: string
           nickname?: string | null
           placement?: number | null
+          player_user_id?: string | null
           slice_index?: number
           victory_points?: number | null
         }
@@ -48,6 +54,13 @@ export type Database = {
             columns: ["game_id"]
             isOneToOne: false
             referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_players_player_user_id_fkey"
+            columns: ["player_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -123,6 +136,7 @@ export type Database = {
     }
     Functions: {
       is_game_owner: { Args: { _game_id: string }; Returns: boolean }
+      is_game_participant: { Args: { _game_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
