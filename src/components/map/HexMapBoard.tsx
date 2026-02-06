@@ -1,5 +1,6 @@
 import { GeneratedMap, hexToPixel, hexPoints, SLICE_COLORS } from "@/lib/map-data";
 import { TI4_FACTIONS } from "@/lib/factions";
+import HexTileGraphics from "./HexTileGraphics";
 
 interface HexMapBoardProps {
   map: GeneratedMap;
@@ -57,14 +58,14 @@ const HexMapBoard = ({ map, sliceFactions }: HexMapBoardProps) => {
           fill = color + "30";
           stroke = color;
         } else if (hex.tile.type === "anomaly") {
-          fill = "#2a1520";
-          stroke = "#5a2535";
+          fill = "#1a1018";
+          stroke = "#3a2030";
         } else if (hex.tile.type === "empty") {
-          fill = "#151820";
-          stroke = "#2a3040";
+          fill = "#0d1018";
+          stroke = "#1a2030";
         } else {
-          fill = color + "18";
-          stroke = color + "70";
+          fill = color + "10";
+          stroke = color + "50";
         }
 
         const factionData = hex.isHome && sliceFactions[hex.sliceIndex]
@@ -77,7 +78,7 @@ const HexMapBoard = ({ map, sliceFactions }: HexMapBoardProps) => {
               points={pts}
               fill={fill}
               stroke={stroke}
-              strokeWidth={hex.isCenter ? 2 : hex.isHome ? 1.8 : 1}
+              strokeWidth={hex.isCenter ? 2 : hex.isHome ? 1.8 : 0.8}
               filter={hex.isCenter ? "url(#glow-gold)" : undefined}
             />
 
@@ -90,7 +91,7 @@ const HexMapBoard = ({ map, sliceFactions }: HexMapBoardProps) => {
                 fill={color}
                 fontSize={6}
                 fontFamily="Orbitron"
-                opacity={0.5}
+                opacity={0.4}
               >
                 {hex.sliceIndex + 1}
               </text>
@@ -133,85 +134,15 @@ const HexMapBoard = ({ map, sliceFactions }: HexMapBoardProps) => {
               </>
             )}
 
-            {/* Single-planet tiles */}
-            {!hex.isCenter && !hex.isHome && hex.tile.type === "planet" && !hex.tile.planets && (
-              <>
-                <text x={x} y={y - 5} textAnchor="middle" fill="#8899aa" fontSize={5.5} fontFamily="Rajdhani" opacity={0.7}>
-                  {hex.tile.name.length > 14 ? hex.tile.name.slice(0, 14) + "…" : hex.tile.name}
-                </text>
-                <text x={x} y={y + 10} textAnchor="middle" fill="#ccd0dd" fontSize={11} fontFamily="Rajdhani" fontWeight={600}>
-                  {hex.tile.resources}/{hex.tile.influence}
-                </text>
-                {hex.tile.wormhole && (
-                  <text x={x} y={y + 20} textAnchor="middle" fill="#7788cc" fontSize={6} fontFamily="Rajdhani">
-                    ⊛ {hex.tile.wormhole}
-                  </text>
-                )}
-              </>
-            )}
-
-            {/* Multi-planet tiles */}
-            {!hex.isCenter && !hex.isHome && hex.tile.type === "planet" && hex.tile.planets && (
-              <>
-                {hex.tile.planets.length === 2 && (
-                  <>
-                    <text x={x} y={y - 10} textAnchor="middle" fill="#8899aa" fontSize={4.5} fontFamily="Rajdhani" opacity={0.7}>
-                      {hex.tile.planets[0].name.length > 12 ? hex.tile.planets[0].name.slice(0, 12) + "…" : hex.tile.planets[0].name}
-                    </text>
-                    <text x={x} y={y - 2} textAnchor="middle" fill="#ccd0dd" fontSize={8} fontFamily="Rajdhani" fontWeight={600}>
-                      {hex.tile.planets[0].resources}/{hex.tile.planets[0].influence}
-                    </text>
-                    <text x={x} y={y + 8} textAnchor="middle" fill="#8899aa" fontSize={4.5} fontFamily="Rajdhani" opacity={0.7}>
-                      {hex.tile.planets[1].name.length > 12 ? hex.tile.planets[1].name.slice(0, 12) + "…" : hex.tile.planets[1].name}
-                    </text>
-                    <text x={x} y={y + 16} textAnchor="middle" fill="#ccd0dd" fontSize={8} fontFamily="Rajdhani" fontWeight={600}>
-                      {hex.tile.planets[1].resources}/{hex.tile.planets[1].influence}
-                    </text>
-                  </>
-                )}
-                {hex.tile.planets.length === 3 && (
-                  <>
-                    <text x={x} y={y - 14} textAnchor="middle" fill="#8899aa" fontSize={4} fontFamily="Rajdhani" opacity={0.7}>
-                      {hex.tile.planets[0].name.length > 10 ? hex.tile.planets[0].name.slice(0, 10) + "…" : hex.tile.planets[0].name}
-                    </text>
-                    <text x={x} y={y - 7} textAnchor="middle" fill="#ccd0dd" fontSize={7} fontFamily="Rajdhani" fontWeight={600}>
-                      {hex.tile.planets[0].resources}/{hex.tile.planets[0].influence}
-                    </text>
-                    <text x={x} y={y + 1} textAnchor="middle" fill="#8899aa" fontSize={4} fontFamily="Rajdhani" opacity={0.7}>
-                      {hex.tile.planets[1].name.length > 10 ? hex.tile.planets[1].name.slice(0, 10) + "…" : hex.tile.planets[1].name}
-                    </text>
-                    <text x={x} y={y + 8} textAnchor="middle" fill="#ccd0dd" fontSize={7} fontFamily="Rajdhani" fontWeight={600}>
-                      {hex.tile.planets[1].resources}/{hex.tile.planets[1].influence}
-                    </text>
-                    <text x={x} y={y + 16} textAnchor="middle" fill="#8899aa" fontSize={4} fontFamily="Rajdhani" opacity={0.7}>
-                      {hex.tile.planets[2].name.length > 10 ? hex.tile.planets[2].name.slice(0, 10) + "…" : hex.tile.planets[2].name}
-                    </text>
-                    <text x={x} y={y + 23} textAnchor="middle" fill="#ccd0dd" fontSize={7} fontFamily="Rajdhani" fontWeight={600}>
-                      {hex.tile.planets[2].resources}/{hex.tile.planets[2].influence}
-                    </text>
-                  </>
-                )}
-                {hex.tile.wormhole && (
-                  <text x={x} y={y + (hex.tile.planets.length === 3 ? 30 : 24)} textAnchor="middle" fill="#7788cc" fontSize={5} fontFamily="Rajdhani">
-                    ⊛ {hex.tile.wormhole}
-                  </text>
-                )}
-              </>
-            )}
-
-            {/* Anomaly tiles */}
-            {!hex.isCenter && !hex.isHome && hex.tile.type === "anomaly" && (
-              <text x={x} y={y + 3} textAnchor="middle" fill="#bb4455" fontSize={6} fontFamily="Rajdhani" fontWeight={500}>
-                {hex.tile.anomaly === "gravity-rift" ? "Gravity Rift" : hex.tile.anomaly === "asteroid" ? "Asteroids" : hex.tile.anomaly}
-              </text>
-            )}
-
-            {/* Empty with wormhole */}
-            {!hex.isCenter && !hex.isHome && hex.tile.type === "empty" && hex.tile.wormhole && (
-              <text x={x} y={y + 3} textAnchor="middle" fill="#7788cc" fontSize={7} fontFamily="Rajdhani">
-                ⊛ {hex.tile.wormhole}
-              </text>
-            )}
+            {/* Tile graphics (planets, anomalies, wormholes, empty) */}
+            <HexTileGraphics
+              tile={hex.tile}
+              x={x}
+              y={y}
+              hexSize={HEX_SIZE}
+              isCenter={hex.isCenter}
+              isHome={hex.isHome}
+            />
           </g>
         );
       })}

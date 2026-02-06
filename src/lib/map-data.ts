@@ -2,10 +2,13 @@ import { MECATOL, HOME_TILE, BLUE_TILES, RED_TILES, findTileById } from "./tile-
 
 export type HexCoord = [number, number]; // [q, r] axial
 
+export type TechSpecialty = "biotic" | "warfare" | "propulsion" | "cybernetic";
+
 export interface PlanetInfo {
   name: string;
   resources: number;
   influence: number;
+  tech?: TechSpecialty;
 }
 
 export interface SystemTile {
@@ -16,6 +19,7 @@ export interface SystemTile {
   type: "planet" | "anomaly" | "empty";
   anomaly?: string;
   wormhole?: string;
+  tech?: TechSpecialty;
   planets?: PlanetInfo[];
 }
 
