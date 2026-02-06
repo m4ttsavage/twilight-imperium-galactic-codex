@@ -62,6 +62,97 @@ function hexKey(q: number, r: number) {
   return `${q},${r}`;
 }
 
+function hexNeighbors(q: number, r: number): HexCoord[] {
+  return [[q + 1, r], [q - 1, r], [q, r + 1], [q, r - 1], [q + 1, r - 1], [q - 1, r + 1]];
+}
+
+// ── BFS contiguous slice assignment ────────────────────────────
+
+function assignContiguousSlices(hexes: MapHex[], homes: HexCoord[], playerCount: number) {
+  // Build coordinate → hex-index lookup
+  const coordMap = new Map<string, number>();
+  hexes.forEach((h, i) => coordMap.set(hexKey(h.q, h.r), i));
+
+  // Identify normal (non-home, non-center) hex indices
+  const normalIndices: number[] = [];
+  hexes.forEach((h, i) => {
+    if (!h.isHome && !h.isCenter) normalIndices.push(i);
+  });
+
+  // Mark all normal hexes as unassigned
+  for (const idx of normalIndices) hexes[idx].sliceIndex = -1;
+
+  // Seed BFS frontiers from each home's neighbors
+  const frontiers: Set<number>[] = Array.from({ length: playerCount }, () => new Set());
+  homes.forEach(([hq, hr], s) => {
+    for (const [nq, nr] of hexNeighbors(hq, hr)) {
+      const idx = coordMap.get(hexKey(nq, nr));
+      if (idx !== undefined && hexes[idx].sliceIndex === -1) {
+        frontiers[s].add(idx);
+      }
+    }
+  });
+
+  // Round-robin BFS — each slice claims one hex per round
+  let assigned = 0;
+  const totalNormal = normalIndices.length;
+
+  while (assigned < totalNormal) {
+    let progress = false;
+    for (let s = 0; s < playerCount; s++) {
+      // Purge stale entries (already claimed by another slice)
+      for (const idx of frontiers[s]) {
+        if (hexes[idx].sliceIndex !== -1) frontiers[s].delete(idx);
+      }
+      if (frontiers[s].size === 0) continue;
+
+      // Pick frontier hex closest (hex distance) to this slice's home
+      const [hq, hr] = homes[s];
+      let bestIdx = -1;
+      let bestDist = Infinity;
+      for (const idx of frontiers[s]) {
+        const dq = hexes[idx].q - hq;
+        const dr = hexes[idx].r - hr;
+        const dist = Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestIdx = idx;
+        }
+      }
+      if (bestIdx === -1) continue;
+
+      // Claim
+      hexes[bestIdx].sliceIndex = s;
+      frontiers[s].delete(bestIdx);
+      assigned++;
+      progress = true;
+
+      // Expand frontier with new neighbors
+      for (const [nq, nr] of hexNeighbors(hexes[bestIdx].q, hexes[bestIdx].r)) {
+        const nIdx = coordMap.get(hexKey(nq, nr));
+        if (nIdx !== undefined && hexes[nIdx].sliceIndex === -1 && !hexes[nIdx].isHome && !hexes[nIdx].isCenter) {
+          frontiers[s].add(nIdx);
+        }
+      }
+    }
+    if (!progress) break;
+  }
+
+  // Fallback: assign any remaining orphans to nearest slice by angle
+  for (const idx of normalIndices) {
+    if (hexes[idx].sliceIndex !== -1) continue;
+    const { x, y } = hexToPixel(hexes[idx].q, hexes[idx].r, 1);
+    let bestSlice = 0;
+    let bestDist = Infinity;
+    homes.forEach(([hq, hr], s) => {
+      const { x: hx, y: hy } = hexToPixel(hq, hr, 1);
+      const d = Math.hypot(x - hx, y - hy);
+      if (d < bestDist) { bestDist = d; bestSlice = s; }
+    });
+    hexes[idx].sliceIndex = bestSlice;
+  }
+}
+
 // ── Ring generation (internal map gen — starts east) ───────────
 
 function generateRing(radius: number): HexCoord[] {
@@ -162,46 +253,11 @@ export function generateMap(playerCount: number, customBlue?: SystemTile[], cust
   const hexes: MapHex[] = [{ q: 0, r: 0, sliceIndex: -1, tile: MECATOL, isHome: false, isCenter: true }];
   homes.forEach(([q, r], i) => hexes.push({ q, r, sliceIndex: i, tile: HOME_TILE, isHome: true, isCenter: false }));
   normalPos.forEach(([q, r], i) => {
-    hexes.push({ q, r, sliceIndex: getSliceIndex(q, r, homes), tile: tiles[i % tiles.length], isHome: false, isCenter: false });
+    hexes.push({ q, r, sliceIndex: -1, tile: tiles[i % tiles.length], isHome: false, isCenter: false });
   });
 
-  // ── Rebalance so every slice has equal (±1) tile count ──────
-  for (let iter = 0; iter < 60; iter++) {
-    const counts = Array.from({ length: playerCount }, (_, i) =>
-      hexes.filter((h) => h.sliceIndex === i && !h.isHome && !h.isCenter).length,
-    );
-    const maxCount = Math.max(...counts);
-    const minCount = Math.min(...counts);
-    if (maxCount - minCount <= 1) break;
-
-    const fromSlice = counts.indexOf(maxCount);
-    const toSlice = counts.indexOf(minCount);
-
-    // Pick the hex in fromSlice whose angle is closest to toSlice's home
-    const { x: hx, y: hy } = hexToPixel(homes[toSlice][0], homes[toSlice][1], 1);
-    const targetAngle = Math.atan2(hy, hx);
-
-    let bestIdx = -1;
-    let bestDiff = Infinity;
-    for (let idx = 0; idx < hexes.length; idx++) {
-      const h = hexes[idx];
-      if (h.sliceIndex !== fromSlice || h.isHome || h.isCenter) continue;
-      const { x, y } = hexToPixel(h.q, h.r, 1);
-      const angle = Math.atan2(y, x);
-      let diff = Math.abs(angle - targetAngle);
-      if (diff > Math.PI) diff = 2 * Math.PI - diff;
-      if (diff < bestDiff) {
-        bestDiff = diff;
-        bestIdx = idx;
-      }
-    }
-
-    if (bestIdx >= 0) {
-      hexes[bestIdx].sliceIndex = toSlice;
-    } else {
-      break;
-    }
-  }
+  // BFS flood-fill from homes → contiguous, balanced slices
+  assignContiguousSlices(hexes, homes, playerCount);
 
   const sliceStats = Array.from({ length: playerCount }, (_, i) => {
     const sh = hexes.filter((h) => h.sliceIndex === i && !h.isHome);
