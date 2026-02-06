@@ -63,10 +63,8 @@ const MapGenerator = () => {
         setPlayerCount(allFactions.length);
         const newMap = generateMap(allFactions.length);
         setMap(newMap);
-        const factions = allFactions.slice(0, newMap.playerCount);
-        setSliceFactions(factions.concat(Array(newMap.playerCount - factions.length).fill(null)));
-        const nicks = factions.map((f) => setup.nicknames?.[f] || "");
-        setSliceNicknames(nicks.concat(Array(newMap.playerCount - nicks.length).fill("")));
+        setSliceFactions(Array(newMap.playerCount).fill(null));
+        setSliceNicknames(Array(newMap.playerCount).fill(""));
         return;
       }
     } catch { /* ignore */ }
