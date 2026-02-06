@@ -107,6 +107,20 @@ const MapGenerator = () => {
       next[sliceIndex] = factionName;
       return next;
     });
+    // Auto-populate nickname from game setup when assigning a faction
+    if (factionName && gameSetupNicknames[factionName]) {
+      setSliceNicknames((prev) => {
+        const next = [...prev];
+        next[sliceIndex] = gameSetupNicknames[factionName];
+        return next;
+      });
+    } else if (!factionName) {
+      setSliceNicknames((prev) => {
+        const next = [...prev];
+        next[sliceIndex] = "";
+        return next;
+      });
+    }
   };
 
   const handleNickname = (sliceIndex: number, nickname: string) => {
