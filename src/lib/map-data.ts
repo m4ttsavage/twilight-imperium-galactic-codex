@@ -165,6 +165,44 @@ export function generateMap(playerCount: number, customBlue?: SystemTile[], cust
     hexes.push({ q, r, sliceIndex: getSliceIndex(q, r, homes), tile: tiles[i % tiles.length], isHome: false, isCenter: false });
   });
 
+  // ── Rebalance so every slice has equal (±1) tile count ──────
+  for (let iter = 0; iter < 60; iter++) {
+    const counts = Array.from({ length: playerCount }, (_, i) =>
+      hexes.filter((h) => h.sliceIndex === i && !h.isHome && !h.isCenter).length,
+    );
+    const maxCount = Math.max(...counts);
+    const minCount = Math.min(...counts);
+    if (maxCount - minCount <= 1) break;
+
+    const fromSlice = counts.indexOf(maxCount);
+    const toSlice = counts.indexOf(minCount);
+
+    // Pick the hex in fromSlice whose angle is closest to toSlice's home
+    const { x: hx, y: hy } = hexToPixel(homes[toSlice][0], homes[toSlice][1], 1);
+    const targetAngle = Math.atan2(hy, hx);
+
+    let bestIdx = -1;
+    let bestDiff = Infinity;
+    for (let idx = 0; idx < hexes.length; idx++) {
+      const h = hexes[idx];
+      if (h.sliceIndex !== fromSlice || h.isHome || h.isCenter) continue;
+      const { x, y } = hexToPixel(h.q, h.r, 1);
+      const angle = Math.atan2(y, x);
+      let diff = Math.abs(angle - targetAngle);
+      if (diff > Math.PI) diff = 2 * Math.PI - diff;
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestIdx = idx;
+      }
+    }
+
+    if (bestIdx >= 0) {
+      hexes[bestIdx].sliceIndex = toSlice;
+    } else {
+      break;
+    }
+  }
+
   const sliceStats = Array.from({ length: playerCount }, (_, i) => {
     const sh = hexes.filter((h) => h.sliceIndex === i && !h.isHome);
     return { resources: sh.reduce((s, h) => s + h.tile.resources, 0), influence: sh.reduce((s, h) => s + h.tile.influence, 0), tileCount: sh.length };

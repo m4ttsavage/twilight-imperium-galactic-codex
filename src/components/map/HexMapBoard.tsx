@@ -124,11 +124,11 @@ const HexMapBoard = ({ map, sliceFactions, sliceNicknames = [], onHomeClick }: H
                 style={onHomeClick ? { cursor: "pointer" } : undefined}
                 onClick={onHomeClick ? () => onHomeClick(hex.sliceIndex) : undefined}
               >
-                <text x={x} y={y} textAnchor="middle" fill={stroke} fontSize={9} fontFamily="Orbitron" fontWeight={600} opacity={0.7}>
+                <text x={x} y={y - 4} textAnchor="middle" fill={stroke} fontSize={9} fontFamily="Orbitron" fontWeight={600} opacity={0.7}>
                   {sliceLabel(hex.sliceIndex)}
                 </text>
                 {onHomeClick && (
-                  <text x={x} y={y + 12} textAnchor="middle" fill={stroke} fontSize={4} fontFamily="Rajdhani" opacity={0.35}>
+                  <text x={x} y={y + 7} textAnchor="middle" fill={stroke} fontSize={4} fontFamily="Rajdhani" opacity={0.35}>
                     click to assign
                   </text>
                 )}
@@ -169,6 +169,60 @@ const HexMapBoard = ({ map, sliceFactions, sliceNicknames = [], onHomeClick }: H
                 </text>
               </g>
             )}
+
+            {/* R/I stats badge on home hexes */}
+            {hex.isHome && (() => {
+              const stats = map.sliceStats[hex.sliceIndex];
+              if (!stats) return null;
+              const badgeY = y + HEX_SIZE * 0.78;
+              return (
+                <g>
+                  <rect
+                    x={x - 16}
+                    y={badgeY - 5.5}
+                    width={32}
+                    height={11}
+                    rx={3}
+                    fill={color + "20"}
+                    stroke={color + "40"}
+                    strokeWidth={0.5}
+                  />
+                  <text
+                    x={x - 3}
+                    y={badgeY + 2}
+                    textAnchor="end"
+                    fontSize={6}
+                    fontFamily="Rajdhani"
+                    fontWeight={700}
+                    fill="#4ade80"
+                  >
+                    {stats.resources}
+                  </text>
+                  <text
+                    x={x}
+                    y={badgeY + 2}
+                    textAnchor="middle"
+                    fontSize={5}
+                    fontFamily="Rajdhani"
+                    fill={color}
+                    opacity={0.5}
+                  >
+                    /
+                  </text>
+                  <text
+                    x={x + 3}
+                    y={badgeY + 2}
+                    textAnchor="start"
+                    fontSize={6}
+                    fontFamily="Rajdhani"
+                    fontWeight={700}
+                    fill="#60a5fa"
+                  >
+                    {stats.influence}
+                  </text>
+                </g>
+              );
+            })()}
 
             {/* Tile graphics (planets, anomalies, wormholes, empty) */}
             <HexTileGraphics
