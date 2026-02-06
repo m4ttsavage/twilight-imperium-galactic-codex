@@ -1,6 +1,7 @@
 import { format } from "date-fns";
-import { Users, Trophy, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Users, Trophy, ChevronDown, ChevronUp, Trash2, ExternalLink } from "lucide-react";
 import { useState } from "react";
+import GameDetailView from "@/components/GameDetailView";
 
 interface GamePlayer {
   id: string;
@@ -76,6 +77,9 @@ const GameHistoryCard = ({ game, onDelete, onViewMap }: Props) => {
 
       {expanded && (
         <div className="border-t border-border p-3 space-y-3">
+          {/* Inline map */}
+          <GameDetailView mapString={game.map_string} players={game.game_players} />
+
           {/* Standings */}
           <div className="space-y-1">
             <span className="text-[9px] font-display uppercase tracking-widest text-muted-foreground">
@@ -117,7 +121,8 @@ const GameHistoryCard = ({ game, onDelete, onViewMap }: Props) => {
               onClick={() => onViewMap(game.map_string)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider"
             >
-              View Map
+              <ExternalLink className="w-3 h-3" />
+              Open in Generator
             </button>
             <button
               onClick={() => onDelete(game.id)}
