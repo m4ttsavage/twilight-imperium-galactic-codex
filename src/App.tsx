@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import FactionReference from "./pages/FactionReference";
 import FactionCompare from "./pages/FactionCompare";
+import MapGenerator from "./pages/MapGenerator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/factions" element={<FactionReference />} />
           <Route path="/factions/compare" element={<FactionCompare />} />
+          <Route path="/map" element={<MapGenerator />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
