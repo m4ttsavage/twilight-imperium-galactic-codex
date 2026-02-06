@@ -14,13 +14,115 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      game_players: {
+        Row: {
+          faction_name: string | null
+          game_id: string
+          id: string
+          nickname: string | null
+          placement: number | null
+          slice_index: number
+          victory_points: number | null
+        }
+        Insert: {
+          faction_name?: string | null
+          game_id: string
+          id?: string
+          nickname?: string | null
+          placement?: number | null
+          slice_index: number
+          victory_points?: number | null
+        }
+        Update: {
+          faction_name?: string | null
+          game_id?: string
+          id?: string
+          nickname?: string | null
+          placement?: number | null
+          slice_index?: number
+          victory_points?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_players_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      games: {
+        Row: {
+          created_at: string
+          id: string
+          map_string: string
+          notes: string | null
+          played_at: string
+          player_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          map_string: string
+          notes?: string | null
+          played_at?: string
+          player_count: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          map_string?: string
+          notes?: string | null
+          played_at?: string
+          player_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "games_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_game_owner: { Args: { _game_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

@@ -1,17 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Map, RefreshCw, ExternalLink, Copy, Share2, Check } from "lucide-react";
+import { ArrowLeft, Map, RefreshCw, ExternalLink, Copy, Share2, Check, User, LogIn } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { generateMap, getSupportedPlayerCounts, parseMapString, exportMapString, type GeneratedMap } from "@/lib/map-data";
 import ImportMapDialog from "@/components/map/ImportMapDialog";
+import SaveGameDialog from "@/components/SaveGameDialog";
 import { TI4_FACTIONS } from "@/lib/factions";
 import HexMapBoard from "@/components/map/HexMapBoard";
 import SlicePanel from "@/components/map/SlicePanel";
 import FloatingChat from "@/components/FloatingChat";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const MapGenerator = () => {
+  const { user, loading: authLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [playerCount, setPlayerCount] = useState(6);
   const [map, setMap] = useState<GeneratedMap | null>(null);
@@ -137,11 +140,30 @@ const MapGenerator = () => {
           transition={{ duration: 0.6 }}
           className="flex-shrink-0 px-4 lg:px-8 pt-5 pb-3"
         >
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center justify-between gap-3 mb-3">
             <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-xs font-body">
               <ArrowLeft className="w-3.5 h-3.5" />
               Back to Chat
             </Link>
+            {!authLoading && (
+              user ? (
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/40 border border-border text-foreground hover:bg-muted/60 transition-colors text-[10px] font-display uppercase tracking-wider"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  Profile
+                </Link>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/40 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-[10px] font-display uppercase tracking-wider"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  Sign In
+                </Link>
+              )
+            )}
           </div>
 
           <div className="flex items-center gap-3 mb-4">
@@ -199,6 +221,9 @@ const MapGenerator = () => {
                 {shared ? <Check className="w-3 h-3 text-green-400" /> : <Share2 className="w-3 h-3" />}
                 {shared ? "Copied" : "Share"}
               </button>
+              {map && user && (
+                <SaveGameDialog map={map} sliceFactions={sliceFactions} sliceNicknames={sliceNicknames} />
+              )}
               <button
                 onClick={handleGenerate}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider"

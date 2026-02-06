@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import FactionReference from "./pages/FactionReference";
 import FactionCompare from "./pages/FactionCompare";
 import MapGenerator from "./pages/MapGenerator";
+import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
           <Route path="/factions" element={<FactionReference />} />
           <Route path="/factions/compare" element={<FactionCompare />} />
           <Route path="/map" element={<MapGenerator />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
