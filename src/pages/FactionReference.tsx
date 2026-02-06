@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Search, Filter, BookOpen, GitCompareArrows, Map, User, LogIn, ArrowUpAZ, ArrowDownAZ } from "lucide-react";
+import { Search, Filter, BookOpen, GitCompareArrows, Map, ArrowUpAZ, ArrowDownAZ } from "lucide-react";
 import { Link } from "react-router-dom";
 import { FACTION_DETAILS } from "@/lib/faction-details";
 import FactionReferenceCard from "@/components/FactionReferenceCard";
+import TopNav from "@/components/TopNav";
 import { useAuth } from "@/hooks/useAuth";
 import heroBg from "@/assets/hero-bg.jpg";
 
@@ -57,66 +58,44 @@ const FactionReference = () => {
 
       {/* Content */}
       <div className="relative z-10 flex flex-col h-full max-w-3xl mx-auto w-full">
+        <TopNav />
         {/* Header */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-shrink-0 px-4 pt-5 pb-3"
+          className="flex-shrink-0 px-4 pt-2 pb-3"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <Link
-              to="/"
-              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-xs font-body"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Back to Chat
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-teal/10 border border-teal/30 flex items-center justify-center glow-teal">
-              <BookOpen className="w-5 h-5 text-teal" />
+          <div className="flex items-center gap-3 mb-3 flex-wrap">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-9 h-9 rounded-lg bg-teal/10 border border-teal/30 flex items-center justify-center glow-teal">
+                <BookOpen className="w-5 h-5 text-teal" />
+              </div>
+              <div className="flex-1">
+                <h1 className="font-display text-sm tracking-widest text-foreground uppercase">
+                  Faction Reference
+                </h1>
+                <p className="text-[10px] font-body text-muted-foreground tracking-wide">
+                  {FACTION_DETAILS.length} factions across 3 expansions
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h1 className="font-display text-sm tracking-widest text-foreground uppercase">
-                Faction Reference
-              </h1>
-              <p className="text-[10px] font-body text-muted-foreground tracking-wide">
-                {FACTION_DETAILS.length} factions across 3 expansions
-              </p>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/map"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider"
+              >
+                <Map className="w-3.5 h-3.5" />
+                Map
+              </Link>
+              <Link
+                to="/factions/compare"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal/10 border border-teal/30 text-teal hover:bg-teal/20 transition-colors text-[10px] font-display uppercase tracking-wider"
+              >
+                <GitCompareArrows className="w-3.5 h-3.5" />
+                Compare
+              </Link>
             </div>
-            <Link
-              to="/map"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider"
-            >
-              <Map className="w-3.5 h-3.5" />
-              Map
-            </Link>
-            <Link
-              to="/factions/compare"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal/10 border border-teal/30 text-teal hover:bg-teal/20 transition-colors text-[10px] font-display uppercase tracking-wider"
-            >
-              <GitCompareArrows className="w-3.5 h-3.5" />
-              Compare
-            </Link>
-            {!authLoading && (
-              user ? (
-                <Link
-                  to="/profile"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/40 border border-border text-foreground hover:bg-muted/60 transition-colors text-[10px] font-display uppercase tracking-wider"
-                >
-                  <User className="w-3.5 h-3.5" />
-                </Link>
-              ) : (
-                <Link
-                  to="/auth"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/40 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-[10px] font-display uppercase tracking-wider"
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                </Link>
-              )
-            )}
           </div>
 
           {/* Search */}
