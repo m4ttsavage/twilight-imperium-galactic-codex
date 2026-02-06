@@ -6,6 +6,7 @@ import { generateMap, getSupportedPlayerCounts, type GeneratedMap } from "@/lib/
 import { TI4_FACTIONS } from "@/lib/factions";
 import HexMapBoard from "@/components/map/HexMapBoard";
 import SlicePanel from "@/components/map/SlicePanel";
+import FloatingChat from "@/components/FloatingChat";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const MapGenerator = () => {
@@ -25,7 +26,6 @@ const MapGenerator = () => {
       if (setup.opponents?.length) allFactions.push(...setup.opponents);
       if (allFactions.length >= 3 && allFactions.length <= 6) {
         setPlayerCount(allFactions.length);
-        // Pre-populate after map generation
         const newMap = generateMap(allFactions.length);
         setMap(newMap);
         const factions = allFactions.slice(0, newMap.playerCount);
@@ -35,7 +35,6 @@ const MapGenerator = () => {
         return;
       }
     } catch { /* ignore */ }
-    // Default: generate empty map
     const newMap = generateMap(6);
     setMap(newMap);
     setSliceFactions(Array(6).fill(null));
@@ -46,10 +45,8 @@ const MapGenerator = () => {
     const newMap = generateMap(playerCount);
     setMap(newMap);
     setSliceFactions((prev) => {
-      const next = Array(playerCount).fill(null);
-      // Preserve existing assignments if count matches
       if (prev.length === playerCount) return prev;
-      return next;
+      return Array(playerCount).fill(null);
     });
     setSliceNicknames((prev) => {
       if (prev.length === playerCount) return prev;
@@ -89,13 +86,13 @@ const MapGenerator = () => {
       <div className="absolute inset-0 opacity-10 bg-cover bg-center" style={{ backgroundImage: `url(${heroBg})` }} />
       <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/90 to-background" />
 
-      <div className="relative z-10 flex flex-col h-full max-w-5xl mx-auto w-full">
+      <div className="relative z-10 flex flex-col h-full w-full">
         {/* Header */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-shrink-0 px-4 pt-5 pb-3"
+          className="flex-shrink-0 px-4 lg:px-8 pt-5 pb-3"
         >
           <div className="flex items-center gap-3 mb-3">
             <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-xs font-body">
@@ -146,51 +143,58 @@ const MapGenerator = () => {
           </div>
         </motion.header>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-4 pb-6">
+        {/* Content: side-by-side on desktop, stacked on mobile */}
+        <div className="flex-1 overflow-y-auto px-4 lg:px-8 pb-6">
           {map && (
             <motion.div
               key={`${map.playerCount}-${map.hexes.length}`}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="space-y-4"
+              className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:items-start"
             >
-              {/* Map */}
-              <div className="rounded-xl border border-border bg-card/40 p-2 overflow-hidden">
-                <HexMapBoard map={map} sliceFactions={sliceFactions} />
+              {/* Map — takes more space on desktop */}
+              <div className="flex-1 min-w-0">
+                <div className="rounded-xl border border-border bg-card/40 p-2 overflow-hidden">
+                  <HexMapBoard map={map} sliceFactions={sliceFactions} />
+                </div>
               </div>
 
-              {/* Slices */}
-              <SlicePanel
-                map={map}
-                sliceFactions={sliceFactions}
-                sliceNicknames={sliceNicknames}
-                availableFactions={allFactionNames}
-                onAssign={handleAssign}
-                onNickname={handleNickname}
-              />
-
-              {/* Attribution */}
-              <div className="text-center py-3 border-t border-border/50">
-                <p className="text-[9px] text-muted-foreground/60 font-body">
-                  Map generation inspired by{" "}
-                  <a
-                    href="https://joepinion.github.io/ti4-map-lab/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-teal/70 hover:text-teal transition-colors inline-flex items-center gap-0.5"
-                  >
-                    TI4 Map Lab
-                    <ExternalLink className="w-2.5 h-2.5" />
-                  </a>{" "}
-                  by Joe Ellis. This is a fan project — Twilight Imperium is © Fantasy Flight Games.
-                </p>
+              {/* Slice panel — sidebar on desktop */}
+              <div className="w-full lg:w-80 xl:w-96 flex-shrink-0">
+                <SlicePanel
+                  map={map}
+                  sliceFactions={sliceFactions}
+                  sliceNicknames={sliceNicknames}
+                  availableFactions={allFactionNames}
+                  onAssign={handleAssign}
+                  onNickname={handleNickname}
+                />
               </div>
             </motion.div>
           )}
+
+          {/* Attribution */}
+          <div className="text-center py-3 mt-4 border-t border-border/50">
+            <p className="text-[9px] text-muted-foreground/60 font-body">
+              Map generation inspired by{" "}
+              <a
+                href="https://joepinion.github.io/ti4-map-lab/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-teal/70 hover:text-teal transition-colors inline-flex items-center gap-0.5"
+              >
+                TI4 Map Lab
+                <ExternalLink className="w-2.5 h-2.5" />
+              </a>{" "}
+              by Joe Ellis. This is a fan project — Twilight Imperium is © Fantasy Flight Games.
+            </p>
+          </div>
         </div>
       </div>
+
+      {/* Floating AI Chat */}
+      <FloatingChat />
     </div>
   );
 };

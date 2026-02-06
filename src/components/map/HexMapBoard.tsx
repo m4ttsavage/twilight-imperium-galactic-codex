@@ -31,7 +31,7 @@ const HexMapBoard = ({ map, sliceFactions }: HexMapBoardProps) => {
   const vb = `${minX - pad} ${minY - pad} ${maxX - minX + pad * 2} ${maxY - minY + pad * 2}`;
 
   return (
-    <svg viewBox={vb} className="w-full h-auto" style={{ maxHeight: "55vh" }}>
+    <svg viewBox={vb} className="w-full h-auto" style={{ maxHeight: "70vh" }}>
       <defs>
         <filter id="glow-gold">
           <feGaussianBlur stdDeviation="3" result="blur" />
