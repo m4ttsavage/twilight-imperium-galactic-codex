@@ -6,11 +6,12 @@ interface SlicePanelProps {
   sliceFactions: (string | null)[];
   sliceNicknames: string[];
   availableFactions: string[];
+  factionNicknames: Record<string, string>;
   onAssign: (sliceIndex: number, factionName: string | null) => void;
   onNickname: (sliceIndex: number, nickname: string) => void;
 }
 
-const SlicePanel = ({ map, sliceFactions, sliceNicknames, availableFactions, onAssign, onNickname }: SlicePanelProps) => {
+const SlicePanel = ({ map, sliceFactions, sliceNicknames, availableFactions, factionNicknames, onAssign, onNickname }: SlicePanelProps) => {
   return (
     <div className="space-y-2">
       <h3 className="text-[10px] font-display uppercase tracking-widest text-muted-foreground">
@@ -59,11 +60,16 @@ const SlicePanel = ({ map, sliceFactions, sliceNicknames, availableFactions, onA
                 className="w-full text-[10px] font-body bg-muted/40 border border-border rounded px-1.5 py-1 text-foreground focus:outline-none focus:border-gold/40 truncate"
               >
                 <option value="">Unassigned</option>
-                {options.map((f) => (
-                  <option key={f} value={f}>
-                    {TI4_FACTIONS.find((ff) => ff.name === f)?.shortName || f}
-                  </option>
-                ))}
+                {options.map((f) => {
+                  const fData = TI4_FACTIONS.find((ff) => ff.name === f);
+                  const nick = factionNicknames[f];
+                  const label = nick ? `${fData?.name || f} (${nick})` : (fData?.name || f);
+                  return (
+                    <option key={f} value={f}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
 
               {/* Nickname */}

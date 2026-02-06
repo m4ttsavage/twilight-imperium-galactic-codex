@@ -31,6 +31,8 @@ const MapGenerator = () => {
   const [shared, setShared] = useState(false);
   const [enabledBanks, setEnabledBanks] = useState<TileBank[]>(["base", "pok", "te"]);
   const [activePickerSlice, setActivePickerSlice] = useState<number | null>(null);
+  const [gameSetupFactions, setGameSetupFactions] = useState<string[]>([]);
+  const [gameSetupNicknames, setGameSetupNicknames] = useState<Record<string, string>>({});
 
   // Load from URL param, localStorage, or generate default
   useEffect(() => {
@@ -53,6 +55,10 @@ const MapGenerator = () => {
       const allFactions: string[] = [];
       if (setup.selectedFaction) allFactions.push(setup.selectedFaction);
       if (setup.opponents?.length) allFactions.push(...setup.opponents);
+      if (allFactions.length >= 1) {
+        setGameSetupFactions(allFactions);
+        setGameSetupNicknames(setup.nicknames || {});
+      }
       if (allFactions.length >= 3 && allFactions.length <= 6) {
         setPlayerCount(allFactions.length);
         const newMap = generateMap(allFactions.length);
@@ -152,7 +158,9 @@ const MapGenerator = () => {
     });
   }, [map, setSearchParams]);
 
-  const allFactionNames = TI4_FACTIONS.map((f) => f.name);
+  const allFactionNames = gameSetupFactions.length > 0
+    ? gameSetupFactions
+    : TI4_FACTIONS.map((f) => f.name);
 
   return (
     <div className="relative flex flex-col h-screen overflow-hidden bg-background">
@@ -257,6 +265,7 @@ const MapGenerator = () => {
                 sliceFactions={sliceFactions}
                 sliceNicknames={sliceNicknames}
                 availableFactions={allFactionNames}
+                factionNicknames={gameSetupNicknames}
                 onAssign={handleAssign}
                 onNickname={handleNickname}
               />
