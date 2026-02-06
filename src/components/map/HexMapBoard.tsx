@@ -1,10 +1,12 @@
-import { GeneratedMap, hexToPixel, hexPoints, SLICE_COLORS } from "@/lib/map-data";
+import { GeneratedMap, hexToPixel, hexPoints, sliceLabel, SLICE_COLORS } from "@/lib/map-data";
 import { TI4_FACTIONS } from "@/lib/factions";
 import HexTileGraphics from "./HexTileGraphics";
 
 interface HexMapBoardProps {
   map: GeneratedMap;
   sliceFactions: (string | null)[];
+  sliceNicknames?: string[];
+  onHomeClick?: (sliceIndex: number) => void;
 }
 
 const HEX_SIZE = 38;
@@ -18,7 +20,7 @@ function getSliceColor(sliceIndex: number, sliceFactions: (string | null)[]): st
   return SLICE_COLORS[sliceIndex % SLICE_COLORS.length];
 }
 
-const HexMapBoard = ({ map, sliceFactions }: HexMapBoardProps) => {
+const HexMapBoard = ({ map, sliceFactions, sliceNicknames = [], onHomeClick }: HexMapBoardProps) => {
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   map.hexes.forEach((h) => {
     const { x, y } = hexToPixel(h.q, h.r, HEX_SIZE);
@@ -72,6 +74,8 @@ const HexMapBoard = ({ map, sliceFactions }: HexMapBoardProps) => {
           ? TI4_FACTIONS.find((f) => f.name === sliceFactions[hex.sliceIndex]!)
           : null;
 
+        const nickname = hex.isHome ? (sliceNicknames[hex.sliceIndex] || "") : "";
+
         return (
           <g key={`${hex.q},${hex.r}`}>
             <polygon
@@ -80,9 +84,11 @@ const HexMapBoard = ({ map, sliceFactions }: HexMapBoardProps) => {
               stroke={stroke}
               strokeWidth={hex.isCenter ? 2 : hex.isHome ? 1.8 : 0.8}
               filter={hex.isCenter ? "url(#glow-gold)" : undefined}
+              style={hex.isHome && onHomeClick ? { cursor: "pointer" } : undefined}
+              onClick={hex.isHome && onHomeClick ? () => onHomeClick(hex.sliceIndex) : undefined}
             />
 
-            {/* Slice index badge */}
+            {/* Slice letter badge */}
             {!hex.isCenter && hex.sliceIndex >= 0 && (
               <text
                 x={x + HEX_SIZE * 0.55}
@@ -93,7 +99,7 @@ const HexMapBoard = ({ map, sliceFactions }: HexMapBoardProps) => {
                 fontFamily="Orbitron"
                 opacity={0.4}
               >
-                {hex.sliceIndex + 1}
+                {sliceLabel(hex.sliceIndex)}
               </text>
             )}
 
@@ -112,26 +118,56 @@ const HexMapBoard = ({ map, sliceFactions }: HexMapBoardProps) => {
               </>
             )}
 
-            {/* Home system */}
+            {/* Home system - no faction assigned */}
             {hex.isHome && !factionData && (
-              <text x={x} y={y + 3} textAnchor="middle" fill={stroke} fontSize={7} fontFamily="Orbitron" fontWeight={500}>
-                HOME
-              </text>
+              <g
+                style={onHomeClick ? { cursor: "pointer" } : undefined}
+                onClick={onHomeClick ? () => onHomeClick(hex.sliceIndex) : undefined}
+              >
+                <text x={x} y={y} textAnchor="middle" fill={stroke} fontSize={9} fontFamily="Orbitron" fontWeight={600} opacity={0.7}>
+                  {sliceLabel(hex.sliceIndex)}
+                </text>
+                {onHomeClick && (
+                  <text x={x} y={y + 12} textAnchor="middle" fill={stroke} fontSize={4} fontFamily="Rajdhani" opacity={0.35}>
+                    click to assign
+                  </text>
+                )}
+              </g>
             )}
+
+            {/* Home system - faction assigned */}
             {hex.isHome && factionData && (
-              <>
+              <g
+                style={onHomeClick ? { cursor: "pointer" } : undefined}
+                onClick={onHomeClick ? () => onHomeClick(hex.sliceIndex) : undefined}
+              >
+                {/* Nickname above icon */}
+                {nickname && (
+                  <text
+                    x={x}
+                    y={y - 20}
+                    textAnchor="middle"
+                    fill={stroke}
+                    fontSize={5.5}
+                    fontFamily="Rajdhani"
+                    fontWeight={600}
+                    opacity={0.85}
+                  >
+                    {nickname}
+                  </text>
+                )}
                 <image
                   href={factionData.icon}
                   x={x - 12}
-                  y={y - 14}
+                  y={nickname ? y - 12 : y - 14}
                   width={24}
                   height={24}
                   opacity={0.9}
                 />
-                <text x={x} y={y + 18} textAnchor="middle" fill={stroke} fontSize={6} fontFamily="Orbitron" fontWeight={500}>
+                <text x={x} y={y + (nickname ? 20 : 18)} textAnchor="middle" fill={stroke} fontSize={6} fontFamily="Orbitron" fontWeight={500}>
                   {factionData.shortName}
                 </text>
-              </>
+              </g>
             )}
 
             {/* Tile graphics (planets, anomalies, wormholes, empty) */}
