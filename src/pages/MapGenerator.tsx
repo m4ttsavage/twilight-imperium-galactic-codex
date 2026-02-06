@@ -272,10 +272,20 @@ const MapGenerator = () => {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:items-start"
+              className="flex flex-col gap-4"
             >
-              {/* Map — takes more space on desktop */}
-              <div className="flex-1 min-w-0 space-y-3">
+              {/* Slice assignments — compact grid above map */}
+              <SlicePanel
+                map={map}
+                sliceFactions={sliceFactions}
+                sliceNicknames={sliceNicknames}
+                availableFactions={allFactionNames}
+                onAssign={handleAssign}
+                onNickname={handleNickname}
+              />
+
+              {/* Map */}
+              <div className="space-y-3">
                 <div className="rounded-xl border border-border bg-card/40 p-2 overflow-hidden">
                   <HexMapBoard
                     map={map}
@@ -285,18 +295,6 @@ const MapGenerator = () => {
                   />
                 </div>
                 <MapLegend />
-              </div>
-
-              {/* Slice panel — sidebar on desktop */}
-              <div className="w-full lg:w-80 xl:w-96 flex-shrink-0">
-                <SlicePanel
-                  map={map}
-                  sliceFactions={sliceFactions}
-                  sliceNicknames={sliceNicknames}
-                  availableFactions={allFactionNames}
-                  onAssign={handleAssign}
-                  onNickname={handleNickname}
-                />
               </div>
             </motion.div>
           )}
