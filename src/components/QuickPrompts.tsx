@@ -9,7 +9,7 @@ const prompts = [
   {
     icon: BookOpen,
     label: "Rules",
-    prompt: "I have a rules question about combat. When exactly can I fire my PDS cannons during a space combat?",
+    prompt: "I'm new - what are the basic rules of Twilight Imperium?",
     color: "text-gold",
     borderColor: "border-gold/20 hover:border-gold/40",
   },
