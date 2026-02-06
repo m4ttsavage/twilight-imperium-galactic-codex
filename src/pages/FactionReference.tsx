@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Search, Filter, BookOpen } from "lucide-react";
+import { ArrowLeft, Search, Filter, BookOpen, GitCompareArrows } from "lucide-react";
 import { Link } from "react-router-dom";
 import { FACTION_DETAILS } from "@/lib/faction-details";
 import FactionReferenceCard from "@/components/FactionReferenceCard";
@@ -71,11 +71,11 @@ const FactionReference = () => {
             </Link>
           </div>
 
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-teal/10 border border-teal/30 flex items-center justify-center glow-teal">
               <BookOpen className="w-5 h-5 text-teal" />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="font-display text-sm tracking-widest text-foreground uppercase">
                 Faction Reference
               </h1>
@@ -83,6 +83,13 @@ const FactionReference = () => {
                 {FACTION_DETAILS.length} factions across 3 expansions
               </p>
             </div>
+            <Link
+              to="/factions/compare"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider"
+            >
+              <GitCompareArrows className="w-3.5 h-3.5" />
+              Compare
+            </Link>
           </div>
 
           {/* Search */}
