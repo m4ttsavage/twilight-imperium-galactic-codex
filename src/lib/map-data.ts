@@ -171,6 +171,29 @@ export function getSupportedPlayerCounts() {
   return [3, 4, 5, 6];
 }
 
+// ── Export map to string ────────────────────────────────────────
+
+export function exportMapString(map: GeneratedMap): string {
+  const maxRing = map.playerCount <= 3 ? 2 : 3;
+
+  // Build TI4 ring order positions
+  const ringPositions: HexCoord[] = [];
+  for (let r = 1; r <= maxRing; r++) ringPositions.push(...generateRingTI4(r));
+
+  // Create a lookup from hex coord to tile
+  const hexLookup = new Map<string, MapHex>();
+  map.hexes.forEach((h) => hexLookup.set(hexKey(h.q, h.r), h));
+
+  // Map each ring position to its tile ID
+  const ids = ringPositions.map(([q, r]) => {
+    const hex = hexLookup.get(hexKey(q, r));
+    if (!hex) return 0;
+    return hex.tile.id;
+  });
+
+  return ids.join(" ");
+}
+
 // ── Parse map string ───────────────────────────────────────────
 
 export function parseMapString(input: string): GeneratedMap {
