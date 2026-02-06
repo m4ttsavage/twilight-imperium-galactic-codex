@@ -15,6 +15,7 @@ const ChatInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFaction, setSelectedFaction] = useState<string | null>(null);
   const [opponents, setOpponents] = useState<string[]>([]);
+  const [nicknames, setNicknames] = useState<Record<string, string>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -86,8 +87,10 @@ const ChatInterface = () => {
         <FactionSelector
           selectedFaction={selectedFaction}
           opponents={opponents}
+          nicknames={nicknames}
           onFactionChange={setSelectedFaction}
           onOpponentsChange={setOpponents}
+          onNicknamesChange={setNicknames}
         />
       </div>
 
