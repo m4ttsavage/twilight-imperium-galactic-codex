@@ -154,6 +154,7 @@ function FactionGrid({
 }) {
   const baseFactions = factions.filter((f) => f.expansion === "base");
   const pokFactions = factions.filter((f) => f.expansion === "pok");
+  const teFactions = factions.filter((f) => f.expansion === "te");
 
   return (
     <div className="space-y-3">
@@ -179,6 +180,22 @@ function FactionGrid({
         </p>
         <div className="grid grid-cols-3 gap-1">
           {pokFactions.map((f) => (
+            <FactionChip
+              key={f.name}
+              faction={f}
+              isSelected={selected.includes(f.name)}
+              isDisabled={disabled.includes(f.name)}
+              onClick={() => onToggle(f.name)}
+            />
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="text-[10px] font-display uppercase tracking-widest text-teal mb-1.5 px-1">
+          Thunder's Edge
+        </p>
+        <div className="grid grid-cols-3 gap-1">
+          {teFactions.map((f) => (
             <FactionChip
               key={f.name}
               faction={f}
