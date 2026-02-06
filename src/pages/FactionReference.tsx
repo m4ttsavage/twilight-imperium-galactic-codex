@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, BookOpen, GitCompareArrows, Map, ArrowUpAZ, ArrowDownAZ, ChevronDown, Check } from "lucide-react";
+import { Search, Filter, BookOpen, GitCompareArrows, Map, ArrowUpAZ, ArrowDownAZ, ChevronDown, Check, Layers } from "lucide-react";
 import { Link } from "react-router-dom";
 import { FACTION_DETAILS } from "@/lib/faction-details";
 import FactionReferenceCard from "@/components/FactionReferenceCard";
@@ -10,6 +10,7 @@ import heroBg from "@/assets/hero-bg.jpg";
 
 type Expansion = "base" | "pok" | "te";
 type Difficulty = "low" | "medium" | "high";
+type GroupBy = "none" | "expansion" | "difficulty";
 
 const expansionOptions: { value: Expansion; label: string }[] = [
   { value: "base", label: "Base" },
@@ -102,6 +103,7 @@ const FactionReference = () => {
   const [expansions, setExpansions] = useState<Expansion[]>([]);
   const [difficulties, setDifficulties] = useState<Difficulty[]>([]);
   const [sortAsc, setSortAsc] = useState(true);
+  const [groupBy, setGroupBy] = useState<GroupBy>("none");
   const { user, loading: authLoading } = useAuth();
 
   const filteredFactions = useMemo(() => {
@@ -118,6 +120,29 @@ const FactionReference = () => {
       return true;
     }).sort((a, b) => sortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
   }, [search, expansions, difficulties, sortAsc]);
+
+  const groupedFactions = useMemo(() => {
+    if (groupBy === "none") return null;
+    const groups: Record<string, typeof filteredFactions> = {};
+    const orderMap = groupBy === "expansion"
+      ? { base: 0, pok: 1, te: 2 }
+      : { low: 0, medium: 1, high: 2 };
+    const labelMap = groupBy === "expansion"
+      ? { base: "Base Game", pok: "Prophecy of Kings", te: "Thunder's Edge" }
+      : { low: "Low Difficulty", medium: "Medium Difficulty", high: "High Difficulty" };
+    for (const f of filteredFactions) {
+      const key = groupBy === "expansion" ? f.expansion : f.difficulty;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(f);
+    }
+    return Object.entries(groups)
+      .sort(([a], [b]) => (orderMap[a as keyof typeof orderMap] ?? 0) - (orderMap[b as keyof typeof orderMap] ?? 0))
+      .map(([key, factions]) => ({
+        key,
+        label: labelMap[key as keyof typeof labelMap] ?? key,
+        factions,
+      }));
+  }, [filteredFactions, groupBy]);
 
   return (
     <div className="relative flex flex-col h-screen overflow-hidden bg-background">
@@ -206,6 +231,19 @@ const FactionReference = () => {
               onChange={setDifficulties}
               accentClass="bg-gold/10 text-gold border-gold/30 hover:bg-gold/20"
             />
+            <div className="relative">
+              <button
+                onClick={() => setGroupBy((prev) => prev === "none" ? "expansion" : prev === "expansion" ? "difficulty" : "none")}
+                className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg font-body transition-colors border ${
+                  groupBy !== "none"
+                    ? "bg-accent/20 text-accent-foreground border-accent/30"
+                    : "bg-muted/30 text-muted-foreground border-border hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                <Layers className="w-3 h-3" />
+                {groupBy === "none" ? "Group" : groupBy === "expansion" ? "By Expansion" : "By Difficulty"}
+              </button>
+            </div>
           </div>
         </motion.header>
 
@@ -222,6 +260,22 @@ const FactionReference = () => {
                 No factions match your filters
               </p>
             </div>
+          ) : groupedFactions ? (
+            groupedFactions.map((group) => (
+              <div key={group.key} className="space-y-2">
+                <div className="sticky top-0 z-10 py-1.5 px-1 backdrop-blur-sm">
+                  <h2 className="text-[11px] font-display uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <span className="w-4 h-px bg-border" />
+                    {group.label}
+                    <span className="text-[9px] opacity-60">({group.factions.length})</span>
+                    <span className="flex-1 h-px bg-border" />
+                  </h2>
+                </div>
+                {group.factions.map((f) => (
+                  <FactionReferenceCard key={f.name} faction={f} />
+                ))}
+              </div>
+            ))
           ) : (
             filteredFactions.map((f) => (
               <FactionReferenceCard key={f.name} faction={f} />
