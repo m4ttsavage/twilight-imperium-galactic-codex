@@ -1,23 +1,28 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, X, Shield, Swords } from "lucide-react";
+import { ChevronDown, X, Shield, Swords, UserPen } from "lucide-react";
 import { TI4_FACTIONS, type Faction } from "@/lib/factions";
 
 interface FactionSelectorProps {
   selectedFaction: string | null;
   opponents: string[];
+  nicknames: Record<string, string>;
   onFactionChange: (faction: string | null) => void;
   onOpponentsChange: (opponents: string[]) => void;
+  onNicknamesChange: (nicknames: Record<string, string>) => void;
 }
 
 const FactionSelector = ({
   selectedFaction,
   opponents,
+  nicknames,
   onFactionChange,
   onOpponentsChange,
+  onNicknamesChange,
 }: FactionSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"my" | "opponents">("my");
+  const [editingNickname, setEditingNickname] = useState<string | null>(null);
 
   const selectedFactionData = TI4_FACTIONS.find((f) => f.name === selectedFaction);
 
@@ -25,9 +30,23 @@ const FactionSelector = ({
     if (factionName === selectedFaction) return;
     if (opponents.includes(factionName)) {
       onOpponentsChange(opponents.filter((o) => o !== factionName));
+      // Clean up nickname
+      const updated = { ...nicknames };
+      delete updated[factionName];
+      onNicknamesChange(updated);
     } else {
       onOpponentsChange([...opponents, factionName]);
     }
+  };
+
+  const setNickname = (factionName: string, nickname: string) => {
+    onNicknamesChange({ ...nicknames, [factionName]: nickname });
+  };
+
+  const formatLabel = (factionName: string) => {
+    const nick = nicknames[factionName];
+    if (nick) return `${TI4_FACTIONS.find((f) => f.name === factionName)?.shortName} [${nick}]`;
+    return TI4_FACTIONS.find((f) => f.name === factionName)?.shortName || factionName;
   };
 
   return (
@@ -36,19 +55,19 @@ const FactionSelector = ({
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-muted/40 border border-border hover:border-gold/30 transition-colors"
       >
-        <div className="flex items-center gap-2">
-          <Shield className="w-4 h-4 text-gold" />
-          <span className="text-sm font-body text-foreground">
-            {selectedFaction || "Set up your game"}
+        <div className="flex items-center gap-2 min-w-0">
+          <Shield className="w-4 h-4 text-gold flex-shrink-0" />
+          <span className="text-sm font-body text-foreground truncate">
+            {selectedFaction ? formatLabel(selectedFaction) : "Set up your game"}
           </span>
           {opponents.length > 0 && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-teal-dim/50 text-teal font-body">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-teal-dim/50 text-teal font-body flex-shrink-0">
               vs {opponents.length}
             </span>
           )}
         </div>
         <ChevronDown
-          className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
@@ -87,19 +106,31 @@ const FactionSelector = ({
             </div>
 
             {/* Faction Grid */}
-            <div className="p-3 max-h-64 overflow-y-auto">
+            <div className="p-3 max-h-80 overflow-y-auto">
               {activeTab === "my" && (
                 <div className="space-y-2">
                   {selectedFaction && (
-                    <button
-                      onClick={() => onFactionChange(null)}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                      Clear selection
-                    </button>
+                    <>
+                      <button
+                        onClick={() => {
+                          onFactionChange(null);
+                          const updated = { ...nicknames };
+                          delete updated[selectedFaction];
+                          onNicknamesChange(updated);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                        Clear selection
+                      </button>
+                      <NicknameInput
+                        factionName={selectedFaction}
+                        nickname={nicknames[selectedFaction] || ""}
+                        onChange={(nick) => setNickname(selectedFaction, nick)}
+                      />
+                    </>
                   )}
-                  <FactionGrid
+                  <FactionList
                     factions={TI4_FACTIONS}
                     selected={selectedFaction ? [selectedFaction] : []}
                     disabled={[]}
@@ -107,27 +138,44 @@ const FactionSelector = ({
                       onFactionChange(name);
                       setActiveTab("opponents");
                     }}
-                    mode="single"
                   />
                 </div>
               )}
               {activeTab === "opponents" && (
                 <div className="space-y-2">
                   {opponents.length > 0 && (
-                    <button
-                      onClick={() => onOpponentsChange([])}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                      Clear all opponents
-                    </button>
+                    <>
+                      <button
+                        onClick={() => {
+                          onOpponentsChange([]);
+                          // Clean up all opponent nicknames
+                          const updated = { ...nicknames };
+                          opponents.forEach((o) => delete updated[o]);
+                          onNicknamesChange(updated);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                        Clear all opponents
+                      </button>
+                      {/* Nickname editors for selected opponents */}
+                      <div className="space-y-1 mb-2">
+                        {opponents.map((opp) => (
+                          <NicknameInput
+                            key={opp}
+                            factionName={opp}
+                            nickname={nicknames[opp] || ""}
+                            onChange={(nick) => setNickname(opp, nick)}
+                          />
+                        ))}
+                      </div>
+                    </>
                   )}
-                  <FactionGrid
+                  <FactionList
                     factions={TI4_FACTIONS}
                     selected={opponents}
                     disabled={selectedFaction ? [selectedFaction] : []}
                     onToggle={toggleOpponent}
-                    mode="multi"
                   />
                 </div>
               )}
@@ -139,18 +187,45 @@ const FactionSelector = ({
   );
 };
 
-function FactionGrid({
+function NicknameInput({
+  factionName,
+  nickname,
+  onChange,
+}: {
+  factionName: string;
+  nickname: string;
+  onChange: (nick: string) => void;
+}) {
+  const faction = TI4_FACTIONS.find((f) => f.name === factionName);
+  if (!faction) return null;
+
+  return (
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/30">
+      <UserPen className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+      <span className="text-[10px] text-muted-foreground font-body flex-shrink-0 truncate max-w-[100px]">
+        {faction.shortName}
+      </span>
+      <input
+        type="text"
+        value={nickname}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Player name..."
+        className="flex-1 min-w-0 text-[11px] font-body bg-transparent border-b border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-gold/40 py-0.5"
+      />
+    </div>
+  );
+}
+
+function FactionList({
   factions,
   selected,
   disabled,
   onToggle,
-  mode,
 }: {
   factions: Faction[];
   selected: string[];
   disabled: string[];
   onToggle: (name: string) => void;
-  mode: "single" | "multi";
 }) {
   const baseFactions = factions.filter((f) => f.expansion === "base");
   const pokFactions = factions.filter((f) => f.expansion === "pok");
@@ -158,59 +233,70 @@ function FactionGrid({
 
   return (
     <div className="space-y-3">
-      <div>
-        <p className="text-[10px] font-display uppercase tracking-widest text-muted-foreground mb-1.5 px-1">
-          Base Game
-        </p>
-        <div className="grid grid-cols-3 gap-1">
-          {baseFactions.map((f) => (
-            <FactionChip
-              key={f.name}
-              faction={f}
-              isSelected={selected.includes(f.name)}
-              isDisabled={disabled.includes(f.name)}
-              onClick={() => onToggle(f.name)}
-            />
-          ))}
-        </div>
-      </div>
-      <div>
-        <p className="text-[10px] font-display uppercase tracking-widest text-muted-foreground mb-1.5 px-1">
-          Prophecy of Kings
-        </p>
-        <div className="grid grid-cols-3 gap-1">
-          {pokFactions.map((f) => (
-            <FactionChip
-              key={f.name}
-              faction={f}
-              isSelected={selected.includes(f.name)}
-              isDisabled={disabled.includes(f.name)}
-              onClick={() => onToggle(f.name)}
-            />
-          ))}
-        </div>
-      </div>
-      <div>
-        <p className="text-[10px] font-display uppercase tracking-widest text-teal mb-1.5 px-1">
-          Thunder's Edge
-        </p>
-        <div className="grid grid-cols-3 gap-1">
-          {teFactions.map((f) => (
-            <FactionChip
-              key={f.name}
-              faction={f}
-              isSelected={selected.includes(f.name)}
-              isDisabled={disabled.includes(f.name)}
-              onClick={() => onToggle(f.name)}
-            />
-          ))}
-        </div>
+      <ExpansionGroup
+        label="Base Game"
+        labelColor="text-muted-foreground"
+        factions={baseFactions}
+        selected={selected}
+        disabled={disabled}
+        onToggle={onToggle}
+      />
+      <ExpansionGroup
+        label="Prophecy of Kings"
+        labelColor="text-muted-foreground"
+        factions={pokFactions}
+        selected={selected}
+        disabled={disabled}
+        onToggle={onToggle}
+      />
+      <ExpansionGroup
+        label="Thunder's Edge"
+        labelColor="text-teal"
+        factions={teFactions}
+        selected={selected}
+        disabled={disabled}
+        onToggle={onToggle}
+      />
+    </div>
+  );
+}
+
+function ExpansionGroup({
+  label,
+  labelColor,
+  factions,
+  selected,
+  disabled,
+  onToggle,
+}: {
+  label: string;
+  labelColor: string;
+  factions: Faction[];
+  selected: string[];
+  disabled: string[];
+  onToggle: (name: string) => void;
+}) {
+  return (
+    <div>
+      <p className={`text-[10px] font-display uppercase tracking-widest ${labelColor} mb-1.5 px-1`}>
+        {label}
+      </p>
+      <div className="space-y-0.5">
+        {factions.map((f) => (
+          <FactionRow
+            key={f.name}
+            faction={f}
+            isSelected={selected.includes(f.name)}
+            isDisabled={disabled.includes(f.name)}
+            onClick={() => onToggle(f.name)}
+          />
+        ))}
       </div>
     </div>
   );
 }
 
-function FactionChip({
+function FactionRow({
   faction,
   isSelected,
   isDisabled,
@@ -225,15 +311,34 @@ function FactionChip({
     <button
       onClick={onClick}
       disabled={isDisabled}
-      className={`px-2 py-1.5 rounded-lg text-[11px] font-body font-medium transition-all truncate ${
+      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-all ${
         isDisabled
-          ? "opacity-30 cursor-not-allowed bg-muted/20 text-muted-foreground"
+          ? "opacity-30 cursor-not-allowed bg-muted/10"
           : isSelected
-          ? "bg-gold/20 text-gold border border-gold/40"
-          : "bg-muted/30 text-foreground/70 border border-transparent hover:bg-muted/50 hover:text-foreground"
+          ? "bg-gold/15 border border-gold/30"
+          : "bg-transparent border border-transparent hover:bg-muted/40"
       }`}
     >
-      {faction.shortName}
+      <div
+        className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 border"
+        style={{
+          backgroundColor: faction.color + "20",
+          borderColor: faction.color + "50",
+        }}
+      >
+        <Shield className="w-3.5 h-3.5" style={{ color: faction.color }} />
+      </div>
+      <span
+        className={`text-[12px] font-body font-medium truncate ${
+          isDisabled
+            ? "text-muted-foreground"
+            : isSelected
+            ? "text-gold"
+            : "text-foreground/80"
+        }`}
+      >
+        {faction.name}
+      </span>
     </button>
   );
 }
