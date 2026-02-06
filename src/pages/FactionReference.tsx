@@ -42,7 +42,7 @@ const FactionReference = () => {
       )
         return false;
       return true;
-    }).sort((a, b) => a.name.localeCompare(b.name));
+    }).sort((a, b) => b.name.localeCompare(a.name));
   }, [search, expansion, difficulty]);
 
   return (
