@@ -202,3 +202,21 @@ const tileMap = new Map<number, SystemTile>(ALL_TILES.map((t) => [t.id, t]));
 export function findTileById(id: number): SystemTile {
   return tileMap.get(id) || { id, name: `Tile ${id}`, resources: 0, influence: 0, type: "empty" };
 }
+
+// ── Tile Bank Selection ────────────────────────────────────────
+
+export type TileBank = "base" | "pok" | "te";
+
+export const TILE_BANK_OPTIONS: { id: TileBank; label: string; blue: SystemTile[]; red: SystemTile[] }[] = [
+  { id: "base", label: "Base Game", blue: BASE_BLUE, red: BASE_RED },
+  { id: "pok", label: "Prophecy of Kings", blue: POK_BLUE, red: POK_RED },
+  { id: "te", label: "Thunder's Edge", blue: EXPANSION_BLUE, red: EXPANSION_RED },
+];
+
+export function getTilesForBanks(banks: TileBank[]): { blue: SystemTile[]; red: SystemTile[] } {
+  const selected = TILE_BANK_OPTIONS.filter((o) => banks.includes(o.id));
+  return {
+    blue: selected.flatMap((o) => o.blue),
+    red: selected.flatMap((o) => o.red),
+  };
+}

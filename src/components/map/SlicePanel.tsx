@@ -1,5 +1,5 @@
 import { TI4_FACTIONS } from "@/lib/factions";
-import { SLICE_COLORS, type GeneratedMap } from "@/lib/map-data";
+import { SLICE_COLORS, sliceLabel, type GeneratedMap } from "@/lib/map-data";
 
 interface SlicePanelProps {
   map: GeneratedMap;
@@ -39,7 +39,7 @@ const SlicePanel = ({ map, sliceFactions, sliceNicknames, availableFactions, onA
                 className="w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-display font-bold flex-shrink-0"
                 style={{ backgroundColor: color + "25", color }}
               >
-                {i + 1}
+                {sliceLabel(i)}
               </div>
 
               {/* Faction selector */}

@@ -3,11 +3,16 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Map, RefreshCw, ExternalLink, Copy, Share2, Check, User, LogIn } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { generateMap, getSupportedPlayerCounts, parseMapString, exportMapString, type GeneratedMap } from "@/lib/map-data";
+import { getTilesForBanks, type TileBank } from "@/lib/tile-database";
+import { improveBalance } from "@/lib/map-balance";
 import ImportMapDialog from "@/components/map/ImportMapDialog";
 import SaveGameDialog from "@/components/SaveGameDialog";
 import { TI4_FACTIONS } from "@/lib/factions";
 import HexMapBoard from "@/components/map/HexMapBoard";
 import SlicePanel from "@/components/map/SlicePanel";
+import SystemBankSelector from "@/components/map/SystemBankSelector";
+import BalanceDropdown from "@/components/map/BalanceDropdown";
+import FactionPickerDialog from "@/components/map/FactionPickerDialog";
 import FloatingChat from "@/components/FloatingChat";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -22,6 +27,8 @@ const MapGenerator = () => {
   const [sliceNicknames, setSliceNicknames] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
+  const [enabledBanks, setEnabledBanks] = useState<TileBank[]>(["base", "pok", "te"]);
+  const [activePickerSlice, setActivePickerSlice] = useState<number | null>(null);
 
   // Load from URL param, localStorage, or generate default
   useEffect(() => {
@@ -61,8 +68,13 @@ const MapGenerator = () => {
     setSliceNicknames(Array(6).fill(""));
   }, []);
 
+  const getFilteredTiles = useCallback(() => {
+    return getTilesForBanks(enabledBanks);
+  }, [enabledBanks]);
+
   const handleGenerate = useCallback(() => {
-    const newMap = generateMap(playerCount);
+    const { blue, red } = getFilteredTiles();
+    const newMap = generateMap(playerCount, blue, red);
     setMap(newMap);
     setSliceFactions((prev) => {
       if (prev.length === playerCount) return prev;
@@ -72,11 +84,12 @@ const MapGenerator = () => {
       if (prev.length === playerCount) return prev;
       return Array(playerCount).fill("");
     });
-  }, [playerCount]);
+  }, [playerCount, getFilteredTiles]);
 
   const handlePlayerCountChange = (count: number) => {
     setPlayerCount(count);
-    const newMap = generateMap(count);
+    const { blue, red } = getFilteredTiles();
+    const newMap = generateMap(count, blue, red);
     setMap(newMap);
     setSliceFactions(Array(count).fill(null));
     setSliceNicknames(Array(count).fill(""));
@@ -98,6 +111,21 @@ const MapGenerator = () => {
     });
   };
 
+  const handleBalance = useCallback(
+    (metric: "resources" | "influence" | "total") => {
+      if (!map) return;
+      const improved = improveBalance(map, metric);
+      setMap(improved);
+      const label = metric === "total" ? "overall balance" : metric;
+      toast.success(`Improved ${label}`);
+    },
+    [map],
+  );
+
+  const handleHomeClick = useCallback((sliceIndex: number) => {
+    setActivePickerSlice(sliceIndex);
+  }, []);
+
   const handleExport = useCallback(() => {
     if (!map) return;
     const mapString = exportMapString(map);
@@ -113,11 +141,9 @@ const MapGenerator = () => {
     const mapString = exportMapString(map);
     const url = new URL(window.location.href);
     url.searchParams.set("map", mapString);
-    // Clean up other params
     url.hash = "";
     navigator.clipboard.writeText(url.toString()).then(() => {
       setShared(true);
-      // Also update the URL bar without reload
       setSearchParams({ map: mapString }, { replace: true });
       toast.success("Share link copied to clipboard");
       setTimeout(() => setShared(false), 2000);
@@ -198,7 +224,9 @@ const MapGenerator = () => {
                 {n}p
               </button>
             ))}
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-2 flex-wrap">
+              <SystemBankSelector enabled={enabledBanks} onChange={setEnabledBanks} />
+              <BalanceDropdown onBalance={handleBalance} disabled={!map} />
               <ImportMapDialog onImport={(imported) => {
                 setPlayerCount(imported.playerCount);
                 setMap(imported);
@@ -248,7 +276,12 @@ const MapGenerator = () => {
               {/* Map — takes more space on desktop */}
               <div className="flex-1 min-w-0">
                 <div className="rounded-xl border border-border bg-card/40 p-2 overflow-hidden">
-                  <HexMapBoard map={map} sliceFactions={sliceFactions} />
+                  <HexMapBoard
+                    map={map}
+                    sliceFactions={sliceFactions}
+                    sliceNicknames={sliceNicknames}
+                    onHomeClick={handleHomeClick}
+                  />
                 </div>
               </div>
 
@@ -284,6 +317,18 @@ const MapGenerator = () => {
           </div>
         </div>
       </div>
+
+      {/* Faction picker dialog for home hex clicks */}
+      {activePickerSlice !== null && (
+        <FactionPickerDialog
+          open={true}
+          sliceIndex={activePickerSlice}
+          currentFaction={sliceFactions[activePickerSlice] ?? null}
+          assignedFactions={sliceFactions}
+          onSelect={(faction) => handleAssign(activePickerSlice, faction)}
+          onClose={() => setActivePickerSlice(null)}
+        />
+      )}
 
       {/* Floating AI Chat */}
       <FloatingChat />

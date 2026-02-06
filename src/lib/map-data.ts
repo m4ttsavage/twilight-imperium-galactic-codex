@@ -54,6 +54,10 @@ export function hexPoints(cx: number, cy: number, size: number): string {
   }).join(" ");
 }
 
+export function sliceLabel(index: number): string {
+  return String.fromCharCode(65 + index); // A, B, C, …
+}
+
 function hexKey(q: number, r: number) {
   return `${q},${r}`;
 }
@@ -137,7 +141,7 @@ export const SLICE_COLORS = [
 
 // ── Map generation ─────────────────────────────────────────────
 
-export function generateMap(playerCount: number): GeneratedMap {
+export function generateMap(playerCount: number, customBlue?: SystemTile[], customRed?: SystemTile[]): GeneratedMap {
   const config = HOME_CONFIGS[playerCount];
   if (!config) throw new Error(`Unsupported player count: ${playerCount}`);
   const { maxRing, homes } = config;
@@ -149,9 +153,11 @@ export function generateMap(playerCount: number): GeneratedMap {
   const normalPos = allPos.filter(([q, r]) => !(q === 0 && r === 0) && !homeSet.has(hexKey(q, r)));
 
   const total = normalPos.length;
+  const blueSrc = customBlue && customBlue.length > 0 ? customBlue : BLUE_TILES;
+  const redSrc = customRed && customRed.length > 0 ? customRed : RED_TILES;
   const redCount = Math.max(2, Math.floor(total * 0.2));
   const blueCount = total - redCount;
-  const tiles = shuffle([...shuffle(BLUE_TILES).slice(0, blueCount), ...shuffle(RED_TILES).slice(0, redCount)]);
+  const tiles = shuffle([...shuffle(blueSrc).slice(0, blueCount), ...shuffle(redSrc).slice(0, redCount)]);
 
   const hexes: MapHex[] = [{ q: 0, r: 0, sliceIndex: -1, tile: MECATOL, isHome: false, isCenter: true }];
   homes.forEach(([q, r], i) => hexes.push({ q, r, sliceIndex: i, tile: HOME_TILE, isHome: true, isCenter: false }));
