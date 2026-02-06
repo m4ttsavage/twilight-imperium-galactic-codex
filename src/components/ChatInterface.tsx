@@ -19,6 +19,11 @@ const ChatInterface = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Persist game setup for MapGenerator
+  useEffect(() => {
+    localStorage.setItem("ti4-game-setup", JSON.stringify({ selectedFaction, opponents, nicknames }));
+  }, [selectedFaction, opponents, nicknames]);
+
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
