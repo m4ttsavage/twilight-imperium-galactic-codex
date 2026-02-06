@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Search, Filter, BookOpen, GitCompareArrows, Map } from "lucide-react";
+import { ArrowLeft, Search, Filter, BookOpen, GitCompareArrows, Map, User, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
 import { FACTION_DETAILS } from "@/lib/faction-details";
 import FactionReferenceCard from "@/components/FactionReferenceCard";
+import { useAuth } from "@/hooks/useAuth";
 import heroBg from "@/assets/hero-bg.jpg";
 
 type Expansion = "all" | "base" | "pok" | "te";
@@ -27,6 +28,7 @@ const FactionReference = () => {
   const [search, setSearch] = useState("");
   const [expansion, setExpansion] = useState<Expansion>("all");
   const [difficulty, setDifficulty] = useState<Difficulty>("all");
+  const { user, loading: authLoading } = useAuth();
 
   const filteredFactions = useMemo(() => {
     return FACTION_DETAILS.filter((f) => {
@@ -97,6 +99,23 @@ const FactionReference = () => {
               <GitCompareArrows className="w-3.5 h-3.5" />
               Compare
             </Link>
+            {!authLoading && (
+              user ? (
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/40 border border-border text-foreground hover:bg-muted/60 transition-colors text-[10px] font-display uppercase tracking-wider"
+                >
+                  <User className="w-3.5 h-3.5" />
+                </Link>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/40 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-[10px] font-display uppercase tracking-wider"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                </Link>
+              )
+            )}
           </div>
 
           {/* Search */}

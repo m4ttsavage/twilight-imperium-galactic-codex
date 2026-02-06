@@ -1,10 +1,13 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { BookOpen, Map } from "lucide-react";
+import { BookOpen, Map, User, LogIn } from "lucide-react";
 import ChatInterface from "@/components/ChatInterface";
+import { useAuth } from "@/hooks/useAuth";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const Index = () => {
+  const { user, loading } = useAuth();
+
   return (
     <div className="relative flex flex-col h-screen overflow-hidden bg-background">
       {/* Background image */}
@@ -51,6 +54,25 @@ const Index = () => {
               <BookOpen className="w-3.5 h-3.5" />
               Factions
             </Link>
+            {!loading && (
+              user ? (
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/40 border border-border text-foreground hover:bg-muted/60 transition-colors text-[11px] font-display tracking-wider uppercase"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  Profile
+                </Link>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/40 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-[11px] font-display tracking-wider uppercase"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  Sign In
+                </Link>
+              )
+            )}
           </div>
         </motion.header>
 
