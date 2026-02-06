@@ -62,7 +62,7 @@ const FactionReferenceCard = ({ faction }: FactionReferenceCardProps) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-display text-sm text-foreground tracking-wide truncate">
-              {faction.shortName}
+              {faction.name}
             </h3>
             <span
               className={`text-[9px] px-1.5 py-0.5 rounded-full border font-display uppercase tracking-wider ${difficultyColor[faction.difficulty]}`}
