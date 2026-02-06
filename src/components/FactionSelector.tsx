@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, X, Shield, Swords, UserPen } from "lucide-react";
+import { Link } from "react-router-dom";
 import { TI4_FACTIONS, type Faction } from "@/lib/factions";
 
 interface FactionSelectorProps {
@@ -66,7 +67,9 @@ const FactionSelector = ({
             <Shield className="w-4 h-4 text-gold flex-shrink-0" />
           )}
           <span className="text-sm font-body text-foreground truncate">
-            {selectedFaction ? formatLabel(selectedFaction) : "Set up your game by choosing factions. Then visit the Map to select starting positions."}
+            {selectedFaction ? formatLabel(selectedFaction) : (
+              <>Set up your game by choosing factions. Then visit the <Link to="/map" className="text-gold underline hover:text-gold/80 transition-colors" onClick={(e) => e.stopPropagation()}>Map</Link> to select starting positions.</>
+            )}
           </span>
           {opponents.length > 0 && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-teal-dim/50 text-teal font-body flex-shrink-0">
