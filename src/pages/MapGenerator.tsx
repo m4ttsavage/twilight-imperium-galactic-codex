@@ -1,26 +1,42 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Map, RefreshCw, ExternalLink } from "lucide-react";
-import { Link } from "react-router-dom";
-import { generateMap, getSupportedPlayerCounts, type GeneratedMap } from "@/lib/map-data";
+import { ArrowLeft, Map, RefreshCw, ExternalLink, Copy, Share2, Check } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { generateMap, getSupportedPlayerCounts, parseMapString, exportMapString, type GeneratedMap } from "@/lib/map-data";
 import ImportMapDialog from "@/components/map/ImportMapDialog";
 import { TI4_FACTIONS } from "@/lib/factions";
 import HexMapBoard from "@/components/map/HexMapBoard";
 import SlicePanel from "@/components/map/SlicePanel";
 import FloatingChat from "@/components/FloatingChat";
+import { toast } from "sonner";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const MapGenerator = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [playerCount, setPlayerCount] = useState(6);
   const [map, setMap] = useState<GeneratedMap | null>(null);
   const [sliceFactions, setSliceFactions] = useState<(string | null)[]>([]);
   const [sliceNicknames, setSliceNicknames] = useState<string[]>([]);
+  const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
 
-  // Read game setup from localStorage (set by ChatInterface)
+  // Load from URL param, localStorage, or generate default
   useEffect(() => {
+    const mapParam = searchParams.get("map");
+    if (mapParam) {
+      try {
+        const imported = parseMapString(mapParam);
+        setPlayerCount(imported.playerCount);
+        setMap(imported);
+        setSliceFactions(Array(imported.playerCount).fill(null));
+        setSliceNicknames(Array(imported.playerCount).fill(""));
+        return;
+      } catch { /* fall through */ }
+    }
+
     try {
       const raw = localStorage.getItem("ti4-game-setup");
-      if (!raw) return;
+      if (!raw) throw new Error();
       const setup = JSON.parse(raw);
       const allFactions: string[] = [];
       if (setup.selectedFaction) allFactions.push(setup.selectedFaction);
@@ -78,6 +94,32 @@ const MapGenerator = () => {
       return next;
     });
   };
+
+  const handleExport = useCallback(() => {
+    if (!map) return;
+    const mapString = exportMapString(map);
+    navigator.clipboard.writeText(mapString).then(() => {
+      setCopied(true);
+      toast.success("Map string copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [map]);
+
+  const handleShare = useCallback(() => {
+    if (!map) return;
+    const mapString = exportMapString(map);
+    const url = new URL(window.location.href);
+    url.searchParams.set("map", mapString);
+    // Clean up other params
+    url.hash = "";
+    navigator.clipboard.writeText(url.toString()).then(() => {
+      setShared(true);
+      // Also update the URL bar without reload
+      setSearchParams({ map: mapString }, { replace: true });
+      toast.success("Share link copied to clipboard");
+      setTimeout(() => setShared(false), 2000);
+    });
+  }, [map, setSearchParams]);
 
   const allFactionNames = TI4_FACTIONS.map((f) => f.name);
 
@@ -141,6 +183,22 @@ const MapGenerator = () => {
                 setSliceFactions(Array(imported.playerCount).fill(null));
                 setSliceNicknames(Array(imported.playerCount).fill(""));
               }} />
+              <button
+                onClick={handleExport}
+                disabled={!map}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider disabled:opacity-40"
+              >
+                {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+                {copied ? "Copied" : "Export"}
+              </button>
+              <button
+                onClick={handleShare}
+                disabled={!map}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider disabled:opacity-40"
+              >
+                {shared ? <Check className="w-3 h-3 text-green-400" /> : <Share2 className="w-3 h-3" />}
+                {shared ? "Copied" : "Share"}
+              </button>
               <button
                 onClick={handleGenerate}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider"
