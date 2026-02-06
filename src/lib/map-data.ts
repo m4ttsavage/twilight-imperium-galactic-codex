@@ -2,6 +2,12 @@ import { MECATOL, HOME_TILE, BLUE_TILES, RED_TILES, findTileById } from "./tile-
 
 export type HexCoord = [number, number]; // [q, r] axial
 
+export interface PlanetInfo {
+  name: string;
+  resources: number;
+  influence: number;
+}
+
 export interface SystemTile {
   id: number;
   name: string;
@@ -10,6 +16,7 @@ export interface SystemTile {
   type: "planet" | "anomaly" | "empty";
   anomaly?: string;
   wormhole?: string;
+  planets?: PlanetInfo[];
 }
 
 export interface MapHex {
