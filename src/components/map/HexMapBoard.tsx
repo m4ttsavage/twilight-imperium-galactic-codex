@@ -133,8 +133,8 @@ const HexMapBoard = ({ map, sliceFactions }: HexMapBoardProps) => {
               </>
             )}
 
-            {/* Planet tiles */}
-            {!hex.isCenter && !hex.isHome && hex.tile.type === "planet" && (
+            {/* Single-planet tiles */}
+            {!hex.isCenter && !hex.isHome && hex.tile.type === "planet" && !hex.tile.planets && (
               <>
                 <text x={x} y={y - 5} textAnchor="middle" fill="#8899aa" fontSize={5.5} fontFamily="Rajdhani" opacity={0.7}>
                   {hex.tile.name.length > 14 ? hex.tile.name.slice(0, 14) + "…" : hex.tile.name}
@@ -144,6 +144,55 @@ const HexMapBoard = ({ map, sliceFactions }: HexMapBoardProps) => {
                 </text>
                 {hex.tile.wormhole && (
                   <text x={x} y={y + 20} textAnchor="middle" fill="#7788cc" fontSize={6} fontFamily="Rajdhani">
+                    ⊛ {hex.tile.wormhole}
+                  </text>
+                )}
+              </>
+            )}
+
+            {/* Multi-planet tiles */}
+            {!hex.isCenter && !hex.isHome && hex.tile.type === "planet" && hex.tile.planets && (
+              <>
+                {hex.tile.planets.length === 2 && (
+                  <>
+                    <text x={x} y={y - 10} textAnchor="middle" fill="#8899aa" fontSize={4.5} fontFamily="Rajdhani" opacity={0.7}>
+                      {hex.tile.planets[0].name.length > 12 ? hex.tile.planets[0].name.slice(0, 12) + "…" : hex.tile.planets[0].name}
+                    </text>
+                    <text x={x} y={y - 2} textAnchor="middle" fill="#ccd0dd" fontSize={8} fontFamily="Rajdhani" fontWeight={600}>
+                      {hex.tile.planets[0].resources}/{hex.tile.planets[0].influence}
+                    </text>
+                    <text x={x} y={y + 8} textAnchor="middle" fill="#8899aa" fontSize={4.5} fontFamily="Rajdhani" opacity={0.7}>
+                      {hex.tile.planets[1].name.length > 12 ? hex.tile.planets[1].name.slice(0, 12) + "…" : hex.tile.planets[1].name}
+                    </text>
+                    <text x={x} y={y + 16} textAnchor="middle" fill="#ccd0dd" fontSize={8} fontFamily="Rajdhani" fontWeight={600}>
+                      {hex.tile.planets[1].resources}/{hex.tile.planets[1].influence}
+                    </text>
+                  </>
+                )}
+                {hex.tile.planets.length === 3 && (
+                  <>
+                    <text x={x} y={y - 14} textAnchor="middle" fill="#8899aa" fontSize={4} fontFamily="Rajdhani" opacity={0.7}>
+                      {hex.tile.planets[0].name.length > 10 ? hex.tile.planets[0].name.slice(0, 10) + "…" : hex.tile.planets[0].name}
+                    </text>
+                    <text x={x} y={y - 7} textAnchor="middle" fill="#ccd0dd" fontSize={7} fontFamily="Rajdhani" fontWeight={600}>
+                      {hex.tile.planets[0].resources}/{hex.tile.planets[0].influence}
+                    </text>
+                    <text x={x} y={y + 1} textAnchor="middle" fill="#8899aa" fontSize={4} fontFamily="Rajdhani" opacity={0.7}>
+                      {hex.tile.planets[1].name.length > 10 ? hex.tile.planets[1].name.slice(0, 10) + "…" : hex.tile.planets[1].name}
+                    </text>
+                    <text x={x} y={y + 8} textAnchor="middle" fill="#ccd0dd" fontSize={7} fontFamily="Rajdhani" fontWeight={600}>
+                      {hex.tile.planets[1].resources}/{hex.tile.planets[1].influence}
+                    </text>
+                    <text x={x} y={y + 16} textAnchor="middle" fill="#8899aa" fontSize={4} fontFamily="Rajdhani" opacity={0.7}>
+                      {hex.tile.planets[2].name.length > 10 ? hex.tile.planets[2].name.slice(0, 10) + "…" : hex.tile.planets[2].name}
+                    </text>
+                    <text x={x} y={y + 23} textAnchor="middle" fill="#ccd0dd" fontSize={7} fontFamily="Rajdhani" fontWeight={600}>
+                      {hex.tile.planets[2].resources}/{hex.tile.planets[2].influence}
+                    </text>
+                  </>
+                )}
+                {hex.tile.wormhole && (
+                  <text x={x} y={y + (hex.tile.planets.length === 3 ? 30 : 24)} textAnchor="middle" fill="#7788cc" fontSize={5} fontFamily="Rajdhani">
                     ⊛ {hex.tile.wormhole}
                   </text>
                 )}

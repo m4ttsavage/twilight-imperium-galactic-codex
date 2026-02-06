@@ -16,18 +16,54 @@ const BASE_BLUE: SystemTile[] = [
   { id: 24, name: "Mehar Xull", resources: 1, influence: 3, type: "planet" },
   { id: 25, name: "Quann", resources: 2, influence: 1, type: "planet", wormhole: "β" },
   { id: 26, name: "Lodor", resources: 3, influence: 1, type: "planet", wormhole: "α" },
-  { id: 27, name: "New Albion / Starpoint", resources: 4, influence: 2, type: "planet" },
-  { id: 28, name: "Tequ'ran / Torkan", resources: 2, influence: 3, type: "planet" },
-  { id: 29, name: "Qucen'n / Rarron", resources: 1, influence: 5, type: "planet" },
-  { id: 30, name: "Mellon / Zohbat", resources: 3, influence: 3, type: "planet" },
-  { id: 31, name: "Lazar / Sakulag", resources: 3, influence: 1, type: "planet" },
-  { id: 32, name: "Dal Bootha / Xxehan", resources: 1, influence: 3, type: "planet" },
-  { id: 33, name: "Corneeq / Resculon", resources: 3, influence: 2, type: "planet" },
-  { id: 34, name: "Centauri / Gral", resources: 2, influence: 4, type: "planet" },
-  { id: 35, name: "Bereg / Lirta IV", resources: 5, influence: 4, type: "planet" },
-  { id: 36, name: "Arnor / Lor", resources: 3, influence: 3, type: "planet" },
-  { id: 37, name: "Arinam / Meer", resources: 1, influence: 6, type: "planet" },
-  { id: 38, name: "Abyz / Fria", resources: 5, influence: 0, type: "planet" },
+  { id: 27, name: "New Albion / Starpoint", resources: 4, influence: 2, type: "planet", planets: [
+    { name: "New Albion", resources: 1, influence: 1 },
+    { name: "Starpoint", resources: 3, influence: 1 },
+  ]},
+  { id: 28, name: "Tequ'ran / Torkan", resources: 2, influence: 3, type: "planet", planets: [
+    { name: "Tequ'ran", resources: 2, influence: 0 },
+    { name: "Torkan", resources: 0, influence: 3 },
+  ]},
+  { id: 29, name: "Qucen'n / Rarron", resources: 1, influence: 5, type: "planet", planets: [
+    { name: "Qucen'n", resources: 1, influence: 2 },
+    { name: "Rarron", resources: 0, influence: 3 },
+  ]},
+  { id: 30, name: "Mellon / Zohbat", resources: 3, influence: 3, type: "planet", planets: [
+    { name: "Mellon", resources: 0, influence: 2 },
+    { name: "Zohbat", resources: 3, influence: 1 },
+  ]},
+  { id: 31, name: "Lazar / Sakulag", resources: 3, influence: 1, type: "planet", planets: [
+    { name: "Lazar", resources: 1, influence: 0 },
+    { name: "Sakulag", resources: 2, influence: 1 },
+  ]},
+  { id: 32, name: "Dal Bootha / Xxehan", resources: 1, influence: 3, type: "planet", planets: [
+    { name: "Dal Bootha", resources: 0, influence: 2 },
+    { name: "Xxehan", resources: 1, influence: 1 },
+  ]},
+  { id: 33, name: "Corneeq / Resculon", resources: 3, influence: 2, type: "planet", planets: [
+    { name: "Corneeq", resources: 1, influence: 2 },
+    { name: "Resculon", resources: 2, influence: 0 },
+  ]},
+  { id: 34, name: "Centauri / Gral", resources: 2, influence: 4, type: "planet", planets: [
+    { name: "Centauri", resources: 1, influence: 3 },
+    { name: "Gral", resources: 1, influence: 1 },
+  ]},
+  { id: 35, name: "Bereg / Lirta IV", resources: 5, influence: 4, type: "planet", planets: [
+    { name: "Bereg", resources: 3, influence: 1 },
+    { name: "Lirta IV", resources: 2, influence: 3 },
+  ]},
+  { id: 36, name: "Arnor / Lor", resources: 3, influence: 3, type: "planet", planets: [
+    { name: "Arnor", resources: 2, influence: 1 },
+    { name: "Lor", resources: 1, influence: 2 },
+  ]},
+  { id: 37, name: "Arinam / Meer", resources: 1, influence: 6, type: "planet", planets: [
+    { name: "Arinam", resources: 1, influence: 2 },
+    { name: "Meer", resources: 0, influence: 4 },
+  ]},
+  { id: 38, name: "Abyz / Fria", resources: 5, influence: 0, type: "planet", planets: [
+    { name: "Abyz", resources: 3, influence: 0 },
+    { name: "Fria", resources: 2, influence: 0 },
+  ]},
 ];
 
 // ── Base Game Red Tiles (39–50) ────────────────────────────────
@@ -60,14 +96,40 @@ const POK_BLUE: SystemTile[] = [
   { id: 66, name: "Hope's End", resources: 3, influence: 0, type: "planet" },
   { id: 67, name: "Cormund", resources: 2, influence: 0, type: "planet", anomaly: "gravity-rift" },
   { id: 68, name: "Everra", resources: 3, influence: 1, type: "planet", anomaly: "nebula" },
-  { id: 69, name: "Accoen / Jeol Ir", resources: 4, influence: 6, type: "planet" },
-  { id: 70, name: "Kraag / Siig", resources: 2, influence: 3, type: "planet" },
-  { id: 71, name: "Alio Prima / Ba'kal", resources: 4, influence: 3, type: "planet" },
-  { id: 72, name: "Lisis / Velnor", resources: 4, influence: 3, type: "planet" },
-  { id: 73, name: "Cealdri / Xanhact", resources: 0, influence: 3, type: "planet" },
-  { id: 74, name: "Vega Major / Vega Minor", resources: 3, influence: 3, type: "planet" },
-  { id: 75, name: "Abaddon / Ashtroth / Loki", resources: 4, influence: 2, type: "planet" },
-  { id: 76, name: "Rigel I / II / III", resources: 2, influence: 4, type: "planet" },
+  { id: 69, name: "Accoen / Jeol Ir", resources: 4, influence: 6, type: "planet", planets: [
+    { name: "Accoen", resources: 2, influence: 3 },
+    { name: "Jeol Ir", resources: 2, influence: 3 },
+  ]},
+  { id: 70, name: "Kraag / Siig", resources: 2, influence: 3, type: "planet", planets: [
+    { name: "Kraag", resources: 2, influence: 1 },
+    { name: "Siig", resources: 0, influence: 2 },
+  ]},
+  { id: 71, name: "Alio Prima / Ba'kal", resources: 4, influence: 3, type: "planet", planets: [
+    { name: "Alio Prima", resources: 1, influence: 1 },
+    { name: "Ba'kal", resources: 3, influence: 2 },
+  ]},
+  { id: 72, name: "Lisis / Velnor", resources: 4, influence: 3, type: "planet", planets: [
+    { name: "Lisis", resources: 2, influence: 2 },
+    { name: "Velnor", resources: 2, influence: 1 },
+  ]},
+  { id: 73, name: "Cealdri / Xanhact", resources: 0, influence: 3, type: "planet", planets: [
+    { name: "Cealdri", resources: 0, influence: 2 },
+    { name: "Xanhact", resources: 0, influence: 1 },
+  ]},
+  { id: 74, name: "Vega Major / Vega Minor", resources: 3, influence: 3, type: "planet", planets: [
+    { name: "Vega Major", resources: 2, influence: 1 },
+    { name: "Vega Minor", resources: 1, influence: 2 },
+  ]},
+  { id: 75, name: "Abaddon / Ashtroth / Loki", resources: 4, influence: 2, type: "planet", planets: [
+    { name: "Abaddon", resources: 1, influence: 0 },
+    { name: "Ashtroth", resources: 2, influence: 0 },
+    { name: "Loki", resources: 1, influence: 2 },
+  ]},
+  { id: 76, name: "Rigel I / II / III", resources: 2, influence: 4, type: "planet", planets: [
+    { name: "Rigel I", resources: 0, influence: 1 },
+    { name: "Rigel II", resources: 1, influence: 2 },
+    { name: "Rigel III", resources: 1, influence: 1 },
+  ]},
 ];
 
 // ── Prophecy of Kings Red Tiles (77–80) ────────────────────────
@@ -90,13 +152,35 @@ const EXPANSION_BLUE: SystemTile[] = [
   { id: 102, name: "Andeara", resources: 1, influence: 1, type: "planet", wormhole: "α" },
   { id: 103, name: "Vira-Pics III", resources: 2, influence: 3, type: "planet" },
   { id: 104, name: "Lesab", resources: 2, influence: 1, type: "planet" },
-  { id: 105, name: "New Terra / Tinnes", resources: 3, influence: 2, type: "planet" },
-  { id: 106, name: "Cresius / Lazul Rex", resources: 2, influence: 3, type: "planet" },
-  { id: 107, name: "Tiamat / Hercalor", resources: 2, influence: 2, type: "planet" },
-  { id: 108, name: "Kostboth / Capha", resources: 3, influence: 1, type: "planet" },
-  { id: 109, name: "Bellatrix / Tsion Stn", resources: 2, influence: 3, type: "planet" },
-  { id: 110, name: "Horizon / El'Nath / Luthien VI", resources: 6, influence: 3, type: "planet" },
-  { id: 111, name: "Tarana / Oluz Stn", resources: 2, influence: 3, type: "planet" },
+  { id: 105, name: "New Terra / Tinnes", resources: 3, influence: 2, type: "planet", planets: [
+    { name: "New Terra", resources: 1, influence: 1 },
+    { name: "Tinnes", resources: 2, influence: 1 },
+  ]},
+  { id: 106, name: "Cresius / Lazul Rex", resources: 2, influence: 3, type: "planet", planets: [
+    { name: "Cresius", resources: 0, influence: 1 },
+    { name: "Lazul Rex", resources: 2, influence: 2 },
+  ]},
+  { id: 107, name: "Tiamat / Hercalor", resources: 2, influence: 2, type: "planet", planets: [
+    { name: "Tiamat", resources: 1, influence: 2 },
+    { name: "Hercalor", resources: 1, influence: 0 },
+  ]},
+  { id: 108, name: "Capha / Kostboth", resources: 3, influence: 1, type: "planet", planets: [
+    { name: "Capha", resources: 3, influence: 0 },
+    { name: "Kostboth", resources: 0, influence: 1 },
+  ]},
+  { id: 109, name: "Bellatrix / Tsion Stn", resources: 2, influence: 3, type: "planet", planets: [
+    { name: "Bellatrix", resources: 1, influence: 2 },
+    { name: "Tsion Stn", resources: 1, influence: 1 },
+  ]},
+  { id: 110, name: "Horizon / El'Nath / Luthien VI", resources: 6, influence: 3, type: "planet", planets: [
+    { name: "Horizon", resources: 2, influence: 1 },
+    { name: "El'Nath", resources: 2, influence: 1 },
+    { name: "Luthien VI", resources: 2, influence: 1 },
+  ]},
+  { id: 111, name: "Tarana / Oluz Stn", resources: 2, influence: 3, type: "planet", planets: [
+    { name: "Tarana", resources: 1, influence: 2 },
+    { name: "Oluz Stn", resources: 1, influence: 1 },
+  ]},
 ];
 
 const EXPANSION_RED: SystemTile[] = [
