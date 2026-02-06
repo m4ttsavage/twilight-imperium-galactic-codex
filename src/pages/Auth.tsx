@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LogIn, UserPlus, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { LogIn, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import TopNav from "@/components/TopNav";
 import { toast } from "sonner";
 import heroBg from "@/assets/hero-bg.jpg";
 import { z } from "zod";
@@ -87,18 +87,9 @@ const Auth = () => {
       <div className="absolute inset-0 opacity-15 bg-cover bg-center" style={{ backgroundImage: `url(${heroBg})` }} />
       <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/90 to-background" />
 
-      <div className="relative z-10 flex flex-col h-full max-w-md mx-auto w-full px-4">
-        <motion.header
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="flex-shrink-0 pt-5 pb-3"
-        >
-          <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-xs font-body mb-6">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Chat
-          </Link>
-        </motion.header>
+      <div className="relative z-10 flex flex-col h-full w-full">
+        <TopNav />
+        <div className="flex-1 flex flex-col max-w-md mx-auto w-full px-4">
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -206,6 +197,7 @@ const Auth = () => {
             </p>
           </div>
         </motion.div>
+        </div>
       </div>
     </div>
   );

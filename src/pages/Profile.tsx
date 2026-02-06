@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, LogOut, User, History } from "lucide-react";
+import { LogOut, User, History } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import GameHistoryCard from "@/components/GameHistoryCard";
+import TopNav from "@/components/TopNav";
 import { toast } from "sonner";
 import heroBg from "@/assets/hero-bg.jpg";
 
@@ -85,18 +86,13 @@ const Profile = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/90 to-background" />
 
       <div className="relative z-10 flex flex-col h-full max-w-2xl mx-auto w-full">
+        <TopNav />
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-shrink-0 px-4 pt-5 pb-3"
+          className="flex-shrink-0 px-4 pb-3"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <Link to="/" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-xs font-body">
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Back to Chat
-            </Link>
-          </div>
 
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-teal/10 border border-teal/30 flex items-center justify-center glow-teal">

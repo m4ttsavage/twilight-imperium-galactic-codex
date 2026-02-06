@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, GitCompareArrows } from "lucide-react";
-import { Link } from "react-router-dom";
+import { GitCompareArrows } from "lucide-react";
 import type { FactionDetail } from "@/lib/faction-details";
 import FactionCompareSelector from "@/components/FactionCompareSelector";
 import ComparisonColumn from "@/components/ComparisonColumn";
+import TopNav from "@/components/TopNav";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const FactionCompare = () => {
@@ -24,22 +24,14 @@ const FactionCompare = () => {
 
       {/* Content */}
       <div className="relative z-10 flex flex-col h-full max-w-4xl mx-auto w-full">
+        <TopNav />
         {/* Header */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-shrink-0 px-4 pt-5 pb-4"
+          className="flex-shrink-0 px-4 pb-4"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <Link
-              to="/factions"
-              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-xs font-body"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Back to Reference
-            </Link>
-          </div>
 
           <div className="flex items-center gap-3 mb-4">
             <div className="w-9 h-9 rounded-lg bg-gold/10 border border-gold/30 flex items-center justify-center glow-gold">

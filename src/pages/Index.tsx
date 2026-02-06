@@ -1,13 +1,9 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { BookOpen, Map, User, LogIn } from "lucide-react";
 import ChatInterface from "@/components/ChatInterface";
-import { useAuth } from "@/hooks/useAuth";
+import TopNav from "@/components/TopNav";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const Index = () => {
-  const { user, loading } = useAuth();
-
   return (
     <div className="relative flex flex-col h-screen overflow-hidden bg-background">
       {/* Background image */}
@@ -18,13 +14,15 @@ const Index = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/90 to-background" />
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col h-full max-w-3xl mx-auto w-full">
+      <div className="relative z-10 flex flex-col h-full w-full">
+        <TopNav />
+
         {/* Title bar */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex-shrink-0 flex items-center justify-between px-4 pt-5 pb-2"
+          className="flex-shrink-0 flex items-center px-4 pt-2 pb-2 max-w-3xl mx-auto w-full"
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-gold/10 border border-gold/30 flex items-center justify-center glow-gold">
@@ -39,41 +37,6 @@ const Index = () => {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Link
-              to="/map"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[11px] font-display tracking-wider uppercase"
-            >
-              <Map className="w-3.5 h-3.5" />
-              Map
-            </Link>
-            <Link
-              to="/factions"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal/10 border border-teal/30 text-teal hover:bg-teal/20 transition-colors text-[11px] font-display tracking-wider uppercase"
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              Factions
-            </Link>
-            {!loading && (
-              user ? (
-                <Link
-                  to="/profile"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/40 border border-border text-foreground hover:bg-muted/60 transition-colors text-[11px] font-display tracking-wider uppercase"
-                >
-                  <User className="w-3.5 h-3.5" />
-                  Profile
-                </Link>
-              ) : (
-                <Link
-                  to="/auth"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/40 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-[11px] font-display tracking-wider uppercase"
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  Sign In
-                </Link>
-              )
-            )}
-          </div>
         </motion.header>
 
         {/* Chat */}
@@ -81,7 +44,7 @@ const Index = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex-1 min-h-0"
+          className="flex-1 min-h-0 max-w-3xl mx-auto w-full"
         >
           <ChatInterface />
         </motion.div>
