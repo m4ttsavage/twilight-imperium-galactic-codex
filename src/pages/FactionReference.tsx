@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, BookOpen, GitCompareArrows, Map, ArrowUpAZ, ArrowDownAZ } from "lucide-react";
+import { Search, Filter, BookOpen, GitCompareArrows, Map, ArrowUpAZ, ArrowDownAZ, ChevronDown, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { FACTION_DETAILS } from "@/lib/faction-details";
 import FactionReferenceCard from "@/components/FactionReferenceCard";
@@ -8,34 +8,106 @@ import TopNav from "@/components/TopNav";
 import { useAuth } from "@/hooks/useAuth";
 import heroBg from "@/assets/hero-bg.jpg";
 
-type Expansion = "all" | "base" | "pok" | "te";
-type Difficulty = "all" | "low" | "medium" | "high";
+type Expansion = "base" | "pok" | "te";
+type Difficulty = "low" | "medium" | "high";
 
-const expansionFilters: { value: Expansion; label: string }[] = [
-  { value: "all", label: "All" },
+const expansionOptions: { value: Expansion; label: string }[] = [
   { value: "base", label: "Base" },
   { value: "pok", label: "PoK" },
   { value: "te", label: "Thunder's Edge" },
 ];
 
-const difficultyFilters: { value: Difficulty; label: string }[] = [
-  { value: "all", label: "Any" },
+const difficultyOptions: { value: Difficulty; label: string }[] = [
   { value: "low", label: "Low" },
   { value: "medium", label: "Medium" },
   { value: "high", label: "High" },
 ];
 
+interface MultiSelectDropdownProps<T extends string> {
+  label: string;
+  options: { value: T; label: string }[];
+  selected: T[];
+  onChange: (selected: T[]) => void;
+  accentClass: string;
+}
+
+function MultiSelectDropdown<T extends string>({ label, options, selected, onChange, accentClass }: MultiSelectDropdownProps<T>) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const toggle = (value: T) => {
+    const next = selected.includes(value)
+      ? selected.filter((v) => v !== value)
+      : [...selected, value];
+    onChange(next);
+  };
+
+  const allSelected = selected.length === 0;
+  const summary = allSelected ? "All" : options.filter((o) => selected.includes(o.value)).map((o) => o.label).join(", ");
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg font-body transition-colors border ${accentClass}`}
+      >
+        <span className="text-[9px] font-display uppercase tracking-wider opacity-70 mr-0.5">{label}:</span>
+        <span className="max-w-[120px] truncate">{summary}</span>
+        <ChevronDown className={`w-2.5 h-2.5 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 z-50 min-w-[160px] rounded-lg border border-border bg-card shadow-lg py-1">
+          {options.map((o) => {
+            const isSelected = selected.includes(o.value);
+            return (
+              <button
+                key={o.value}
+                onClick={() => toggle(o.value)}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-[11px] font-body hover:bg-muted/50 transition-colors text-foreground"
+              >
+                <span className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors ${isSelected ? "bg-teal/20 border-teal/50" : "border-border"}`}>
+                  {isSelected && <Check className="w-2.5 h-2.5 text-teal" />}
+                </span>
+                {o.label}
+              </button>
+            );
+          })}
+          {selected.length > 0 && (
+            <>
+              <div className="border-t border-border my-1" />
+              <button
+                onClick={() => onChange([])}
+                className="w-full px-3 py-1.5 text-[10px] font-body text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-left"
+              >
+                Clear filters
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const FactionReference = () => {
   const [search, setSearch] = useState("");
-  const [expansion, setExpansion] = useState<Expansion>("all");
-  const [difficulty, setDifficulty] = useState<Difficulty>("all");
+  const [expansions, setExpansions] = useState<Expansion[]>([]);
+  const [difficulties, setDifficulties] = useState<Difficulty[]>([]);
   const [sortAsc, setSortAsc] = useState(true);
   const { user, loading: authLoading } = useAuth();
 
   const filteredFactions = useMemo(() => {
     return FACTION_DETAILS.filter((f) => {
-      if (expansion !== "all" && f.expansion !== expansion) return false;
-      if (difficulty !== "all" && f.difficulty !== difficulty) return false;
+      if (expansions.length > 0 && !expansions.includes(f.expansion as Expansion)) return false;
+      if (difficulties.length > 0 && !difficulties.includes(f.difficulty as Difficulty)) return false;
       if (
         search &&
         !f.name.toLowerCase().includes(search.toLowerCase()) &&
@@ -45,7 +117,7 @@ const FactionReference = () => {
         return false;
       return true;
     }).sort((a, b) => sortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
-  }, [search, expansion, difficulty, sortAsc]);
+  }, [search, expansions, difficulties, sortAsc]);
 
   return (
     <div className="relative flex flex-col h-screen overflow-hidden bg-background">
@@ -110,63 +182,30 @@ const FactionReference = () => {
             />
           </div>
 
-          {/* Filters */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Filter className="w-3 h-3 text-muted-foreground" />
-              <span className="text-[10px] font-display uppercase tracking-widest text-muted-foreground">
-                Sort
-              </span>
-              <button
-                onClick={() => setSortAsc((prev) => !prev)}
-                className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg font-body transition-colors bg-gold/20 text-gold border border-gold/30 hover:bg-gold/30"
-              >
-                {sortAsc ? <ArrowUpAZ className="w-3 h-3" /> : <ArrowDownAZ className="w-3 h-3" />}
-                {sortAsc ? "A → Z" : "Z → A"}
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              <Filter className="w-3 h-3 text-muted-foreground" />
-              <span className="text-[10px] font-display uppercase tracking-widest text-muted-foreground">
-                Expansion
-              </span>
-              <div className="flex gap-1 ml-1">
-                {expansionFilters.map((f) => (
-                  <button
-                    key={f.value}
-                    onClick={() => setExpansion(f.value)}
-                    className={`text-[10px] px-2 py-1 rounded-lg font-body transition-colors ${
-                      expansion === f.value
-                        ? "bg-teal/20 text-teal border border-teal/30"
-                        : "bg-muted/30 text-muted-foreground border border-transparent hover:text-foreground"
-                    }`}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Filter className="w-3 h-3 text-muted-foreground" />
-              <span className="text-[10px] font-display uppercase tracking-widest text-muted-foreground">
-                Difficulty
-              </span>
-              <div className="flex gap-1 ml-1">
-                {difficultyFilters.map((f) => (
-                  <button
-                    key={f.value}
-                    onClick={() => setDifficulty(f.value)}
-                    className={`text-[10px] px-2 py-1 rounded-lg font-body transition-colors ${
-                      difficulty === f.value
-                        ? "bg-gold/20 text-gold border border-gold/30"
-                        : "bg-muted/30 text-muted-foreground border border-transparent hover:text-foreground"
-                    }`}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* Filters — single row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter className="w-3 h-3 text-muted-foreground" />
+            <button
+              onClick={() => setSortAsc((prev) => !prev)}
+              className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg font-body transition-colors bg-gold/20 text-gold border border-gold/30 hover:bg-gold/30"
+            >
+              {sortAsc ? <ArrowUpAZ className="w-3 h-3" /> : <ArrowDownAZ className="w-3 h-3" />}
+              {sortAsc ? "A → Z" : "Z → A"}
+            </button>
+            <MultiSelectDropdown
+              label="Expansion"
+              options={expansionOptions}
+              selected={expansions}
+              onChange={setExpansions}
+              accentClass="bg-teal/10 text-teal border-teal/30 hover:bg-teal/20"
+            />
+            <MultiSelectDropdown
+              label="Difficulty"
+              options={difficultyOptions}
+              selected={difficulties}
+              onChange={setDifficulties}
+              accentClass="bg-gold/10 text-gold border-gold/30 hover:bg-gold/20"
+            />
           </div>
         </motion.header>
 
