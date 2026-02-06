@@ -1,11 +1,50 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { motion } from "framer-motion";
+import ChatInterface from "@/components/ChatInterface";
+import heroBg from "@/assets/hero-bg.jpg";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="relative flex flex-col h-screen overflow-hidden bg-background">
+      {/* Background image */}
+      <div
+        className="absolute inset-0 opacity-15 bg-cover bg-center"
+        style={{ backgroundImage: `url(${heroBg})` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/90 to-background" />
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col h-full max-w-3xl mx-auto w-full">
+        {/* Title bar */}
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex-shrink-0 flex items-center justify-between px-4 pt-5 pb-2"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-gold/10 border border-gold/30 flex items-center justify-center glow-gold">
+              <span className="font-display text-sm text-gold font-bold">TI</span>
+            </div>
+            <div>
+              <h1 className="font-display text-sm tracking-widest text-foreground uppercase">
+                Galactic Codex
+              </h1>
+              <p className="text-[10px] font-body text-muted-foreground tracking-wide">
+                Twilight Imperium 4th Edition • AI Companion
+              </p>
+            </div>
+          </div>
+        </motion.header>
+
+        {/* Chat */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex-1 min-h-0"
+        >
+          <ChatInterface />
+        </motion.div>
       </div>
     </div>
   );

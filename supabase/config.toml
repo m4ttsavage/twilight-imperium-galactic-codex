@@ -1,0 +1,4 @@
+project_id = "qqgymzyrdiqwizrinrmi"
+
+[functions.ti4-chat]
+verify_jwt = false
