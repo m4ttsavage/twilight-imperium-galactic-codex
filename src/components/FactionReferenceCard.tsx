@@ -23,9 +23,15 @@ const difficultyColor: Record<string, string> = {
   high: "text-red-400 bg-red-400/10 border-red-400/30",
 };
 
+const expansionColor: Record<string, string> = {
+  base: "text-blue-400 bg-blue-400/10 border-blue-400/30",
+  pok: "text-purple-400 bg-purple-400/10 border-purple-400/30",
+  te: "text-teal bg-teal/10 border-teal/30",
+};
+
 const expansionLabel: Record<string, string> = {
-  base: "Base Game",
-  pok: "Prophecy of Kings",
+  base: "Base",
+  pok: "PoK",
   te: "Thunder's Edge",
 };
 
@@ -67,9 +73,11 @@ const FactionReferenceCard = ({ faction }: FactionReferenceCardProps) => {
           <p className="text-[11px] text-muted-foreground font-body mt-0.5">
             {faction.tagline}
           </p>
-          <p className="text-[9px] text-muted-foreground/60 font-body mt-0.5">
-            {expansionLabel[faction.expansion]}
-          </p>
+          <span
+              className={`text-[9px] px-1.5 py-0.5 rounded-full border font-display uppercase tracking-wider ${expansionColor[faction.expansion]}`}
+            >
+              {expansionLabel[faction.expansion]}
+            </span>
         </div>
 
         <div className="flex-shrink-0 text-muted-foreground mt-1">

@@ -40,7 +40,7 @@ const FactionReference = () => {
       )
         return false;
       return true;
-    });
+    }).sort((a, b) => a.name.localeCompare(b.name));
   }, [search, expansion, difficulty]);
 
   return (
