@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Search, Filter, BookOpen, GitCompareArrows, Map, User, LogIn } from "lucide-react";
+import { ArrowLeft, Search, Filter, BookOpen, GitCompareArrows, Map, User, LogIn, ArrowUpAZ, ArrowDownAZ } from "lucide-react";
 import { Link } from "react-router-dom";
 import { FACTION_DETAILS } from "@/lib/faction-details";
 import FactionReferenceCard from "@/components/FactionReferenceCard";
@@ -28,6 +28,7 @@ const FactionReference = () => {
   const [search, setSearch] = useState("");
   const [expansion, setExpansion] = useState<Expansion>("all");
   const [difficulty, setDifficulty] = useState<Difficulty>("all");
+  const [sortAsc, setSortAsc] = useState(true);
   const { user, loading: authLoading } = useAuth();
 
   const filteredFactions = useMemo(() => {
@@ -42,8 +43,8 @@ const FactionReference = () => {
       )
         return false;
       return true;
-    }).sort((a, b) => b.name.localeCompare(a.name));
-  }, [search, expansion, difficulty]);
+    }).sort((a, b) => sortAsc ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
+  }, [search, expansion, difficulty, sortAsc]);
 
   return (
     <div className="relative flex flex-col h-screen overflow-hidden bg-background">
@@ -132,6 +133,19 @@ const FactionReference = () => {
 
           {/* Filters */}
           <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Filter className="w-3 h-3 text-muted-foreground" />
+              <span className="text-[10px] font-display uppercase tracking-widest text-muted-foreground">
+                Sort
+              </span>
+              <button
+                onClick={() => setSortAsc((prev) => !prev)}
+                className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg font-body transition-colors bg-gold/20 text-gold border border-gold/30 hover:bg-gold/30"
+              >
+                {sortAsc ? <ArrowUpAZ className="w-3 h-3" /> : <ArrowDownAZ className="w-3 h-3" />}
+                {sortAsc ? "A → Z" : "Z → A"}
+              </button>
+            </div>
             <div className="flex items-center gap-2">
               <Filter className="w-3 h-3 text-muted-foreground" />
               <span className="text-[10px] font-display uppercase tracking-widest text-muted-foreground">
