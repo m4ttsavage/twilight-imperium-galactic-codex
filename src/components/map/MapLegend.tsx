@@ -87,6 +87,23 @@ const MapLegend = () => {
           ))}
         </div>
       </div>
+
+      {/* Slice Stats */}
+      <div className="space-y-1.5">
+        <p className="text-[9px] font-display uppercase tracking-wider text-muted-foreground/70">
+          Slice Stats
+        </p>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-0.5 text-[10px] font-body">
+            <span className="font-semibold" style={{ color: "#4ade80" }}>R</span>
+            <span className="text-muted-foreground/50">/</span>
+            <span className="font-semibold" style={{ color: "#60a5fa" }}>I</span>
+          </span>
+          <span className="text-[10px] font-body text-foreground/70">
+            = Total <span className="font-semibold" style={{ color: "#4ade80" }}>Resources</span> / <span className="font-semibold" style={{ color: "#60a5fa" }}>Influence</span> in a slice (shown on home hexes)
+          </span>
+        </div>
+      </div>
     </div>
   );
 };
