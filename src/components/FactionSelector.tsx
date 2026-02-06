@@ -66,7 +66,7 @@ const FactionSelector = ({
             <Shield className="w-4 h-4 text-gold flex-shrink-0" />
           )}
           <span className="text-sm font-body text-foreground truncate">
-            {selectedFaction ? formatLabel(selectedFaction) : "Set up your game"}
+            {selectedFaction ? formatLabel(selectedFaction) : "Set up your game by choosing factions. Then visit the Map to select starting positions."}
           </span>
           {opponents.length > 0 && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-teal-dim/50 text-teal font-body flex-shrink-0">
