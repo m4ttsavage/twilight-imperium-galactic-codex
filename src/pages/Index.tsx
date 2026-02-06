@@ -1,4 +1,6 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { BookOpen } from "lucide-react";
 import ChatInterface from "@/components/ChatInterface";
 import heroBg from "@/assets/hero-bg.jpg";
 
@@ -34,6 +36,13 @@ const Index = () => {
               </p>
             </div>
           </div>
+          <Link
+            to="/factions"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal/10 border border-teal/30 text-teal hover:bg-teal/20 transition-colors text-[11px] font-display tracking-wider uppercase"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            Factions
+          </Link>
         </motion.header>
 
         {/* Chat */}
