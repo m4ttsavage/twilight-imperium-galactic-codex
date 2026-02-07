@@ -58,16 +58,6 @@ const Profile = () => {
     fetchGames();
   }, [user]);
 
-  const handleDelete = async (gameId: string) => {
-    const { error } = await supabase.from("games").delete().eq("id", gameId);
-    if (error) {
-      toast.error("Failed to delete game");
-    } else {
-      setGames((prev) => prev.filter((g) => g.id !== gameId));
-      toast.success("Game deleted");
-    }
-  };
-
   const handleViewMap = (mapString: string) => {
     navigate(`/game/new?map=${encodeURIComponent(mapString)}`);
   };
@@ -154,7 +144,6 @@ const Profile = () => {
                 <GameHistoryCard
                   key={game.id}
                   game={game}
-                  onDelete={handleDelete}
                   onViewMap={handleViewMap}
                 />
               ))}

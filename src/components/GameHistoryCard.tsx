@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Users, Trophy, ChevronDown, ChevronUp, Trash2, ExternalLink } from "lucide-react";
+import { Users, Trophy, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import GameDetailView from "@/components/GameDetailView";
 
@@ -24,11 +24,10 @@ interface Game {
 
 interface Props {
   game: Game;
-  onDelete: (id: string) => void;
   onViewMap: (mapString: string) => void;
 }
 
-const GameHistoryCard = ({ game, onDelete, onViewMap }: Props) => {
+const GameHistoryCard = ({ game, onViewMap }: Props) => {
   const [expanded, setExpanded] = useState(false);
 
   const sortedPlayers = [...game.game_players].sort((a, b) => {
@@ -123,13 +122,6 @@ const GameHistoryCard = ({ game, onDelete, onViewMap }: Props) => {
             >
               <ExternalLink className="w-3 h-3" />
               Open in Generator
-            </button>
-            <button
-              onClick={() => onDelete(game.id)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 transition-colors text-[10px] font-display uppercase tracking-wider ml-auto"
-            >
-              <Trash2 className="w-3 h-3" />
-              Delete
             </button>
           </div>
         </div>
