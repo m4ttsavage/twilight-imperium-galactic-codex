@@ -3,6 +3,7 @@ import { Users, Trophy, ChevronDown, ChevronUp, ExternalLink, Gamepad2 } from "l
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import GameDetailView from "@/components/GameDetailView";
+import GameCompleteSummary from "@/components/game/GameCompleteSummary";
 
 interface GamePlayer {
   id: string;
@@ -78,44 +79,27 @@ const GameHistoryCard = ({ game, onViewMap }: Props) => {
 
       {expanded && (
         <div className="border-t border-border p-3 space-y-3">
+          {/* Game Complete Summary (read-only standings) */}
+          {sortedPlayers.some((p) => p.placement !== null) && (
+            <GameCompleteSummary
+              players={sortedPlayers.map((p) => ({
+                id: p.id,
+                player_user_id: null,
+                nickname: p.nickname,
+                faction_name: p.faction_name,
+                slice_index: p.slice_index,
+                strategy_card: null,
+                draft_position: null,
+                faction_locked: false,
+                placement: p.placement,
+                victory_points: p.victory_points,
+              }))}
+              notes={game.notes}
+            />
+          )}
+
           {/* Inline map */}
           <GameDetailView mapString={game.map_string} players={game.game_players} />
-
-          {/* Standings */}
-          <div className="space-y-1">
-            <span className="text-[9px] font-display uppercase tracking-widest text-muted-foreground">
-              Standings
-            </span>
-            <div className="rounded-lg border border-border overflow-hidden">
-              <table className="w-full text-xs font-body">
-                <thead>
-                  <tr className="bg-muted/30 text-[9px] font-display uppercase tracking-wider text-muted-foreground">
-                    <th className="px-2 py-1.5 text-left">#</th>
-                    <th className="px-2 py-1.5 text-left">Faction</th>
-                    <th className="px-2 py-1.5 text-left">Player</th>
-                    <th className="px-2 py-1.5 text-right">VP</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedPlayers.map((p) => (
-                    <tr key={p.id} className={`border-t border-border/50 ${p.placement === 1 ? "bg-gold/5" : ""}`}>
-                      <td className="px-2 py-1.5 text-muted-foreground">{p.placement ?? "—"}</td>
-                      <td className="px-2 py-1.5 text-foreground">{p.faction_name || "—"}</td>
-                      <td className="px-2 py-1.5 text-muted-foreground">{p.nickname || "—"}</td>
-                      <td className="px-2 py-1.5 text-right text-foreground">{p.victory_points ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {game.notes && (
-            <div>
-              <span className="text-[9px] font-display uppercase tracking-widest text-muted-foreground">Notes</span>
-              <p className="text-xs font-body text-foreground/80 mt-0.5">{game.notes}</p>
-            </div>
-          )}
 
           <div className="flex items-center gap-2">
             <Link
