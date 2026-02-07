@@ -32,10 +32,48 @@ export type Database = {
         }
         Relationships: []
       }
+      game_player_emails: {
+        Row: {
+          created_at: string
+          email: string
+          game_id: string
+          game_player_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          game_id: string
+          game_player_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          game_id?: string
+          game_player_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_player_emails_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_player_emails_game_player_id_fkey"
+            columns: ["game_player_id"]
+            isOneToOne: true
+            referencedRelation: "game_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_players: {
         Row: {
           draft_position: number | null
-          email: string | null
           faction_locked: boolean | null
           faction_name: string | null
           faction_pref_1: string | null
@@ -53,7 +91,6 @@ export type Database = {
         }
         Insert: {
           draft_position?: number | null
-          email?: string | null
           faction_locked?: boolean | null
           faction_name?: string | null
           faction_pref_1?: string | null
@@ -71,7 +108,6 @@ export type Database = {
         }
         Update: {
           draft_position?: number | null
-          email?: string | null
           faction_locked?: boolean | null
           faction_name?: string | null
           faction_pref_1?: string | null

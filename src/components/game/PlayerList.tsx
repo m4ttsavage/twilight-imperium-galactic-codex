@@ -11,7 +11,6 @@ export interface GamePlayerInfo {
   strategy_card: number | null;
   draft_position: number | null;
   faction_locked: boolean;
-  email: string | null;
 }
 
 interface Props {
@@ -21,7 +20,6 @@ interface Props {
   gameStatus: string;
   currentTurnPlayerId?: string | null;
   playerCount: number;
-  isHost?: boolean;
 }
 
 const PlayerList = ({
@@ -31,7 +29,6 @@ const PlayerList = ({
   gameStatus,
   currentTurnPlayerId,
   playerCount,
-  isHost = false,
 }: Props) => {
   const emptySlots = Math.max(0, playerCount - players.length);
 
@@ -85,7 +82,7 @@ const PlayerList = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1">
                 <span className="text-[11px] font-body text-foreground truncate">
-                  {p.nickname || ((isHost || isCurrentUser) ? p.email : null) || "Player"}
+                  {p.nickname || "Player"}
                 </span>
                 {isHost && <Crown className="w-3 h-3 text-gold flex-shrink-0" />}
                 {isCurrentUser && (

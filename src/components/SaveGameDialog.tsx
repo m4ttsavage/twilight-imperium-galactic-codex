@@ -76,16 +76,32 @@ const SaveGameDialog = ({ map, sliceFactions, sliceNicknames }: Props) => {
         slice_index: i,
         faction_name: sliceFactions[i] || null,
         nickname: results[i].name || null,
-        email: results[i].email || null,
         placement: results[i].placement ? parseInt(results[i].placement) : null,
         victory_points: results[i].victoryPoints ? parseInt(results[i].victoryPoints) : null,
       }));
 
-      const { error: playersError } = await supabase
+      const { data: insertedPlayers, error: playersError } = await supabase
         .from("game_players")
-        .insert(players);
+        .insert(players)
+        .select("id");
 
       if (playersError) throw playersError;
+
+      // Insert emails into private table (only host can access)
+      const emailRows = results
+        .map((r, i) => ({
+          game_player_id: insertedPlayers[i].id,
+          game_id: game.id,
+          email: r.email.trim(),
+        }))
+        .filter((row) => row.email.length > 0);
+
+      if (emailRows.length > 0) {
+        const { error: emailError } = await supabase
+          .from("game_player_emails" as any)
+          .insert(emailRows as any);
+        if (emailError) throw emailError;
+      }
 
       toast.success("Game saved!");
       setOpen(false);

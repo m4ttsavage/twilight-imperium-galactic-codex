@@ -127,23 +127,39 @@ const CreateGame = () => {
 
         if (error) throw error;
 
-        // Insert all player rows
+        // Insert all player rows (without email - that goes to private table)
         const playerRows = assignments.map((a) => ({
           game_id: game.id,
           nickname: a.name.trim(),
-          email: a.email.trim() || null,
           faction_name: a.factionName,
           slice_index: a.sliceIndex,
           strategy_card: a.strategyCard,
           faction_locked: true,
-          player_user_id: null, // trigger will auto-resolve by email
+          player_user_id: null,
         }));
 
-        const { error: insertError } = await supabase
+        const { data: insertedPlayers, error: insertError } = await supabase
           .from("game_players")
-          .insert(playerRows as any);
+          .insert(playerRows as any)
+          .select("id");
 
         if (insertError) throw insertError;
+
+        // Insert emails into private table (only host can access)
+        const emailRows = assignments
+          .map((a, i) => ({
+            game_player_id: insertedPlayers[i].id,
+            game_id: game.id,
+            email: a.email.trim(),
+          }))
+          .filter((row) => row.email.length > 0);
+
+        if (emailRows.length > 0) {
+          const { error: emailError } = await supabase
+            .from("game_player_emails" as any)
+            .insert(emailRows as any);
+          if (emailError) throw emailError;
+        }
 
         toast.success("Game created with all assignments!");
         navigate(`/game/${game.id}`);
