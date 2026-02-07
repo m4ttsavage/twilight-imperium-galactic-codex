@@ -16,7 +16,6 @@ import BalanceDropdown from "@/components/map/BalanceDropdown";
 import FactionPickerDialog from "@/components/map/FactionPickerDialog";
 import MapLegend from "@/components/map/MapLegend";
 import FloatingChat from "@/components/FloatingChat";
-import { useIsMobile } from "@/hooks/use-mobile";
 import TopNav from "@/components/TopNav";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -24,7 +23,6 @@ import heroBg from "@/assets/hero-bg.jpg";
 
 const MapGenerator = () => {
   const { user, loading: authLoading } = useAuth();
-  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [playerCount, setPlayerCount] = useState(6);
   const [map, setMap] = useState<GeneratedMap | null>(null);
