@@ -1,112 +1,81 @@
 
 
-## Add Game Names, Map Export, and Lobby Links
+# Add Display Name to Profile and Searchable Faction Selectors
 
-### 1. Random Space-Themed Game Name
-
-Each game gets a randomly generated 4-word name at creation time (e.g., "Galactic Frozen Pickle Monsoon"). The name is generated client-side from curated word lists that are space-themed and free of inappropriate language.
-
-**Word list structure** (new file `src/lib/game-names.ts`):
-- 4 word pools, each containing 40-60 safe, space-themed words
-- Pool 1 (adjectives): galactic, stellar, cosmic, nebular, frozen, crimson, ancient, orbital, radiant, phantom, etc.
-- Pool 2 (adjectives): blazing, silent, drifting, shattered, hollow, molten, winding, volatile, etc.
-- Pool 3 (nouns): pickle, comet, beacon, citadel, monsoon, vortex, pulsar, eclipse, titan, nova, etc.
-- Pool 4 (nouns): crusade, summit, rift, tempest, exodus, cascade, dominion, frontier, armada, etc.
-- A `generateGameName()` function picks one random word from each pool and joins them
-
-**Database change**: Add a `name` column to the `games` table:
-```sql
-ALTER TABLE public.games ADD COLUMN name text;
-```
-This is nullable so existing games remain valid.
-
-**Where the name is generated and stored**:
-- In `CreateGame.tsx`: call `generateGameName()` and include `name` in the insert
-- In `SaveGameDialog.tsx` (if it creates games): also include the name
-
-**Where the name is displayed**:
-- **Game Lobby header**: Show the game name prominently above/beside the map, next to the status pill
-- **Profile page / GameHistoryCard**: Replace the generic "6p Game" title with the game name (fall back to "6p Game" for older games without a name)
-
-### 2. Export Map String Button on Lobby Page
-
-Add a "Copy Map" / "Export" button to the lobby page that copies the game's `map_string` to the clipboard -- using the same clipboard + toast pattern as the Create Game page's export button.
-
-**Location**: In the lobby header, next to the existing "Share Link" button.
-
-### 3. Profile Game Cards Link to Lobby
-
-Each game history card on the profile page will link directly to its lobby page (`/game/{id}`). 
-
-**Changes to `GameHistoryCard`**:
-- Add game `id` to the component's `Game` interface (already present)
-- Add a "View Lobby" button in the expanded card footer, or make the card header itself link to the lobby
-- Replace (or supplement) the "Open in Generator" button with a "View in Lobby" button using `navigate(/game/${game.id})`
+## Overview
+Two connected features: (1) let you set a display name on your profile that auto-fills as your player nickname on the Codex page, and (2) add typeahead/search filtering to all faction selection areas across the app.
 
 ---
 
-### Summary of Files Changed
+## Part 1: Display Name on Profile
 
-| File | Change |
-|------|--------|
-| `src/lib/game-names.ts` | **New** -- Word lists and `generateGameName()` function |
-| `src/pages/CreateGame.tsx` | Generate and store game name on creation |
-| `src/components/SaveGameDialog.tsx` | Generate and store game name on save (if applicable) |
-| `src/pages/GameLobby.tsx` | Display game name in header; add Export Map button; update `GameData` interface to include `name` |
-| `src/components/GameHistoryCard.tsx` | Display game name instead of generic title; add "View in Lobby" link; keep "Open in Generator" as secondary option |
-| `src/pages/Profile.tsx` | No changes needed -- `GameHistoryCard` handles the linking |
+The `profiles` table already has a `display_name` column. We just need to wire it up.
 
-### Technical Details
+**Profile page (`src/pages/Profile.tsx`)**
+- Fetch the user's `display_name` from the `profiles` table on load
+- Show an editable name field below the email, with a save button
+- On save, upsert the profile row with the new display name
+- Show the display name in the header alongside the email
 
-**Database migration**:
-```sql
-ALTER TABLE public.games ADD COLUMN name text;
-```
-No RLS changes needed -- existing policies cover read/write of the new column.
+**Auto-fill on Codex page (`src/components/ChatInterface.tsx` / `src/components/FactionSelector.tsx`)**
+- When the user selects "My Faction" and is logged in, auto-populate the nickname field with their `display_name` from the profiles table
+- The user can still override it manually
+- This uses the existing `nicknames` state and `NicknameInput` component
 
-**`src/lib/game-names.ts`** structure:
-```typescript
-const POOL_1 = ["Galactic", "Stellar", "Cosmic", ...];
-const POOL_2 = ["Frozen", "Blazing", "Silent", ...];
-const POOL_3 = ["Pickle", "Comet", "Beacon", ...];
-const POOL_4 = ["Monsoon", "Crusade", "Summit", ...];
+**Implementation**: Create a small `useProfile` hook that fetches and caches the display name, reusable across pages.
 
-function pick(arr: string[]): string {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+---
 
-export function generateGameName(): string {
-  return `${pick(POOL_1)} ${pick(POOL_2)} ${pick(POOL_3)} ${pick(POOL_4)}`;
-}
-```
+## Part 2: Searchable Faction Selectors
 
-**Lobby header layout** -- game name displayed as a secondary heading under "Game Lobby":
-```
-Game Lobby
-Galactic Frozen Pickle Monsoon  |  6 players  [In Progress]
-```
+There are 4 places that need search/typeahead for faction selection:
 
-**GameHistoryCard collapsed row** -- game name replaces "6p Game":
-```
-[icon] Galactic Frozen Pickle Monsoon   Jan 15, 2026
-       [trophy] The Federation of Sol (Alex) -- 10 VP
-```
-Falls back to `{game.player_count}p Game` when `game.name` is null.
+### 2a. Codex Page FactionSelector (`src/components/FactionSelector.tsx`)
+- Add a search input at the top of the faction grid (inside the dropdown)
+- Filter the `FactionList` items by search query matching faction name or short name
+- Works for both "My Faction" and "Opponents" tabs
 
-**Export button in lobby** -- reuses the same Copy icon + toast pattern from CreateGame:
-```typescript
-const handleExportMap = () => {
-  navigator.clipboard.writeText(game.map_string).then(() => {
-    toast.success("Map string copied to clipboard");
-  });
-};
-```
+### 2b. Create Game -- Host Setup Panel (`src/components/game/HostSetupPanel.tsx`)
+- Replace the plain `<select>` for faction with a custom searchable dropdown
+- Create a reusable `FactionSearchSelect` component that shows a text input with filtered dropdown results, faction icons, and expansion grouping
+- Same visual style as the existing `FactionCompareSelector` (which already has search)
 
-**View in Lobby button** in GameHistoryCard:
-```typescript
-<Link to={`/game/${game.id}`} className="...">
-  <Gamepad2 className="w-3 h-3" />
-  View in Lobby
-</Link>
-```
+### 2c. Game Lobby -- Faction Draft Panel (`src/components/game/FactionDraftPanel.tsx`)
+- Replace the 3 plain `<select>` elements (1st/2nd/3rd choice) with the same `FactionSearchSelect` component
+- Maintains the existing exclude logic (can't pick the same faction twice)
+
+### 2d. Map Page -- Faction Picker Dialog (`src/components/map/FactionPickerDialog.tsx`)
+- Add a search bar at the top of the grid dialog
+- Filter the icon grid by search query
+
+---
+
+## New Shared Component
+
+**`src/components/FactionSearchSelect.tsx`** -- A reusable searchable faction dropdown:
+- Text input with search icon
+- Dropdown list filtered by name/shortName
+- Shows faction icon + name for each option
+- Supports excluding already-used factions (disabled/hidden)
+- Handles selection and clear
+- Styled consistently with the app's design system (dark theme, font-display labels, etc.)
+
+---
+
+## Technical Details
+
+### New files
+- `src/hooks/useProfile.ts` -- Fetches and updates `display_name` from the profiles table
+- `src/components/FactionSearchSelect.tsx` -- Reusable searchable faction picker
+
+### Modified files
+1. **`src/pages/Profile.tsx`** -- Add display name field with save functionality
+2. **`src/components/ChatInterface.tsx`** -- Use `useProfile` hook to get display name, pass it to FactionSelector
+3. **`src/components/FactionSelector.tsx`** -- Accept optional `defaultNickname` prop for auto-fill; add search input to faction list
+4. **`src/components/game/HostSetupPanel.tsx`** -- Replace faction `<select>` with `FactionSearchSelect`
+5. **`src/components/game/FactionDraftPanel.tsx`** -- Replace faction `<select>` elements with `FactionSearchSelect`
+6. **`src/components/map/FactionPickerDialog.tsx`** -- Add search input above the faction icon grid
+
+### No database changes needed
+The `profiles` table already has `display_name` with appropriate RLS policies (users can read/write their own profile).
 
