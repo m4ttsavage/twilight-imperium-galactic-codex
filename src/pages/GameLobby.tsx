@@ -12,6 +12,8 @@ import FactionDraftPanel from "@/components/game/FactionDraftPanel";
 import SliceDraftPanel from "@/components/game/SliceDraftPanel";
 import StrategyDraftPanel from "@/components/game/StrategyDraftPanel";
 import FateMessage from "@/components/game/FateMessage";
+import GameResultsPanel from "@/components/game/GameResultsPanel";
+import GameCompleteSummary from "@/components/game/GameCompleteSummary";
 import TopNav from "@/components/TopNav";
 import { toast } from "sonner";
 import {
@@ -161,6 +163,40 @@ const GameLobby = () => {
     } else {
       toast.success("Game deleted");
       navigate("/profile");
+    }
+  };
+
+  // Complete game (host only)
+  const handleCompleteGame = async (
+    results: { playerId: string; placement: number | null; victoryPoints: number | null }[],
+    notes: string
+  ) => {
+    if (!gameId || !game) return;
+    try {
+      // Update each player's placement and VP
+      for (const r of results) {
+        const { error } = await supabase
+          .from("game_players")
+          .update({
+            placement: r.placement,
+            victory_points: r.victoryPoints,
+          } as any)
+          .eq("id", r.playerId);
+        if (error) throw error;
+      }
+
+      // Update game status and notes
+      const updateData: any = { status: "complete" };
+      if (notes.trim()) updateData.notes = notes.trim();
+      const { error } = await supabase
+        .from("games")
+        .update(updateData)
+        .eq("id", gameId);
+      if (error) throw error;
+
+      toast.success("Game results recorded!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save results");
     }
   };
 
@@ -328,6 +364,7 @@ const GameLobby = () => {
     slice_draft: "Slice Draft",
     strategy_draft: "Strategy Draft",
     ready: "Game Ready",
+    complete: "Completed",
   };
 
   if (loadingGame) {
@@ -506,21 +543,37 @@ const GameLobby = () => {
               )}
 
               {game.status === "ready" && (
-                <div className="rounded-lg border border-teal/30 bg-teal/5 p-4 space-y-2">
-                  <h3 className="font-display text-xs tracking-widest uppercase text-teal">
-                    🎉 Game Ready!
-                  </h3>
-                  <p className="text-[10px] font-body text-foreground/80">
-                    {game.setup_mode === "host_chooses"
-                      ? "All assignments were made by the host. The galaxy awaits!"
-                      : "All factions, slices, and strategy cards have been assigned. The galaxy awaits!"}
-                  </p>
-                  {game.setup_mode === "host_chooses" && (
-                    <span className="inline-block text-[8px] font-display uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted/30 border border-border text-muted-foreground">
-                      Host Setup
-                    </span>
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-teal/30 bg-teal/5 p-4 space-y-2">
+                    <h3 className="font-display text-xs tracking-widest uppercase text-teal">
+                      🎉 Game Ready!
+                    </h3>
+                    <p className="text-[10px] font-body text-foreground/80">
+                      {game.setup_mode === "host_chooses"
+                        ? "All assignments were made by the host. The galaxy awaits!"
+                        : "All factions, slices, and strategy cards have been assigned. The galaxy awaits!"}
+                    </p>
+                    {game.setup_mode === "host_chooses" && (
+                      <span className="inline-block text-[8px] font-display uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted/30 border border-border text-muted-foreground">
+                        Host Setup
+                      </span>
+                    )}
+                  </div>
+
+                  {isHost && (
+                    <GameResultsPanel
+                      players={players}
+                      onSubmit={handleCompleteGame}
+                    />
                   )}
                 </div>
+              )}
+
+              {game.status === "complete" && (
+                <GameCompleteSummary
+                  players={players}
+                  notes={game.notes}
+                />
               )}
             </div>
           </div>
