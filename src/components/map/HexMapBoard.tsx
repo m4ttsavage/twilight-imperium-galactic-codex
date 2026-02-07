@@ -142,32 +142,27 @@ const HexMapBoard = ({ map, sliceFactions, sliceNicknames = [], onHomeClick }: H
                 style={onHomeClick ? { cursor: "pointer" } : undefined}
                 onClick={onHomeClick ? () => onHomeClick(hex.sliceIndex) : undefined}
               >
-                {/* Nickname above icon */}
-                {nickname && (
-                  <text
-                    x={x}
-                    y={y - 18}
-                    textAnchor="middle"
-                    fill={stroke}
-                    fontSize={5}
-                    fontFamily="Rajdhani"
-                    fontWeight={600}
-                    opacity={0.85}
-                  >
-                    {nickname}
-                  </text>
-                )}
+                {/* Faction short name above icon */}
+                <text
+                  x={x}
+                  y={y - 18}
+                  textAnchor="middle"
+                  fill={stroke}
+                  fontSize={5.5}
+                  fontFamily="Orbitron"
+                  fontWeight={500}
+                  opacity={0.85}
+                >
+                  {factionData.shortName}
+                </text>
                 <image
                   href={factionData.icon}
                   x={x - 9}
-                  y={nickname ? y - 13 : y - 14}
+                  y={y - 14}
                   width={18}
                   height={18}
                   opacity={0.9}
                 />
-                <text x={x} y={y + (nickname ? 11 : 10)} textAnchor="middle" fill={stroke} fontSize={5.5} fontFamily="Orbitron" fontWeight={500}>
-                  {factionData.shortName}
-                </text>
               </g>
             )}
 
