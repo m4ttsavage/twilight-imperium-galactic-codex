@@ -1,12 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Map, BookOpen, GitCompareArrows, Shield, User, LogIn } from "lucide-react";
+import { Home, Map, BookOpen, Shield, User, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { to: "/", label: "Codex", icon: Home },
   { to: "/game/new", label: "Create Game", icon: Map },
   { to: "/factions", label: "Factions", icon: BookOpen },
-  { to: "/factions/compare", label: "Compare", icon: GitCompareArrows },
   { to: "/strategy", label: "Strategy", icon: Shield },
 ];
 
