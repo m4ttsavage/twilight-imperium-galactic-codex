@@ -9,12 +9,14 @@ import ImportMapDialog from "@/components/map/ImportMapDialog";
 import SaveGameDialog from "@/components/SaveGameDialog";
 import { TI4_FACTIONS } from "@/lib/factions";
 import HexMapBoard from "@/components/map/HexMapBoard";
+import ZoomableMapContainer from "@/components/map/ZoomableMapContainer";
 import SlicePanel from "@/components/map/SlicePanel";
 import SystemBankSelector from "@/components/map/SystemBankSelector";
 import BalanceDropdown from "@/components/map/BalanceDropdown";
 import FactionPickerDialog from "@/components/map/FactionPickerDialog";
 import MapLegend from "@/components/map/MapLegend";
 import FloatingChat from "@/components/FloatingChat";
+import { useIsMobile } from "@/hooks/use-mobile";
 import TopNav from "@/components/TopNav";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -22,6 +24,7 @@ import heroBg from "@/assets/hero-bg.jpg";
 
 const MapGenerator = () => {
   const { user, loading: authLoading } = useAuth();
+  const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [playerCount, setPlayerCount] = useState(6);
   const [map, setMap] = useState<GeneratedMap | null>(null);
@@ -282,17 +285,21 @@ const MapGenerator = () => {
                 onNickname={handleNickname}
               />
 
-              {/* Map */}
-              <div className="space-y-3">
-                <div className="rounded-xl border border-border bg-card/40 p-2 overflow-hidden">
-                  <HexMapBoard
-                    map={map}
-                    sliceFactions={sliceFactions}
-                    sliceNicknames={sliceNicknames}
-                    onHomeClick={handleHomeClick}
-                  />
+              {/* Map + Legend */}
+              <div className="flex flex-col lg:flex-row gap-3">
+                <div className="flex-1 min-w-0">
+                  <ZoomableMapContainer>
+                    <HexMapBoard
+                      map={map}
+                      sliceFactions={sliceFactions}
+                      sliceNicknames={sliceNicknames}
+                      onHomeClick={handleHomeClick}
+                    />
+                  </ZoomableMapContainer>
                 </div>
-                <MapLegend />
+                <div className="lg:w-52 flex-shrink-0">
+                  <MapLegend compact={!isMobile} />
+                </div>
               </div>
             </motion.div>
           )}
