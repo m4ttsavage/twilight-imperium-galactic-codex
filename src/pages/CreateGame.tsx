@@ -7,10 +7,12 @@ import { getTilesForBanks, type TileBank } from "@/lib/tile-database";
 import { improveBalance } from "@/lib/map-balance";
 import ImportMapDialog from "@/components/map/ImportMapDialog";
 import HexMapBoard from "@/components/map/HexMapBoard";
+import ZoomableMapContainer from "@/components/map/ZoomableMapContainer";
 import SystemBankSelector from "@/components/map/SystemBankSelector";
 import BalanceDropdown from "@/components/map/BalanceDropdown";
 import MapLegend from "@/components/map/MapLegend";
 import FloatingChat from "@/components/FloatingChat";
+import { useIsMobile } from "@/hooks/use-mobile";
 import TopNav from "@/components/TopNav";
 import HostSetupPanel, { type PlayerAssignment, type InitialPlayerData } from "@/components/game/HostSetupPanel";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,6 +24,7 @@ type SetupMode = "players_choose" | "host_chooses";
 
 const CreateGame = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { user, loading: authLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [playerCount, setPlayerCount] = useState(6);
@@ -397,14 +400,20 @@ const CreateGame = () => {
                 </div>
               )}
 
-              <div className="rounded-xl border border-border bg-card/40 p-2 overflow-hidden">
-                <HexMapBoard
-                  map={map}
-                  sliceFactions={Array(map.playerCount).fill(null)}
-                  sliceNicknames={Array(map.playerCount).fill("")}
-                />
+              <div className="flex flex-col lg:flex-row gap-3">
+                <div className="flex-1 min-w-0">
+                  <ZoomableMapContainer>
+                    <HexMapBoard
+                      map={map}
+                      sliceFactions={Array(map.playerCount).fill(null)}
+                      sliceNicknames={Array(map.playerCount).fill("")}
+                    />
+                  </ZoomableMapContainer>
+                </div>
+                <div className="lg:w-52 flex-shrink-0">
+                  <MapLegend compact={!isMobile} />
+                </div>
               </div>
-              <MapLegend />
             </motion.div>
           )}
 
