@@ -48,11 +48,13 @@ const QuickPrompts = ({ onSelect }: QuickPromptsProps) => {
           onClick={() => onSelect(item.prompt)}
           className={`group flex flex-col items-start gap-2 p-4 rounded-xl bg-muted/30 border ${item.borderColor} transition-all duration-300 hover:bg-muted/50 text-left`}
         >
-          <item.icon className={`w-5 h-5 ${item.color} transition-transform group-hover:scale-110`} />
-          <span className="font-display text-xs tracking-wider uppercase text-foreground">
-            {item.label}
-          </span>
-          <span className="text-xs text-muted-foreground line-clamp-2 font-body">
+          <div className="flex items-center gap-2">
+            <item.icon className={`w-5 h-5 ${item.color} transition-transform group-hover:scale-110`} />
+            <span className="font-display text-xs tracking-wider uppercase text-foreground">
+              {item.label}
+            </span>
+          </div>
+          <span className="text-sm text-muted-foreground line-clamp-3 font-body">
             {item.prompt}
           </span>
         </motion.button>
