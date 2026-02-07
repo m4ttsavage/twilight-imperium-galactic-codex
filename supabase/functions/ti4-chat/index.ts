@@ -157,19 +157,33 @@ serve(async (req) => {
 
     if (!rlReadErr && rlState) {
       const windowAge = (Date.now() - new Date(rlState.window_start).getTime()) / 1000;
-      // If user has exceeded limit significantly (3x+) within current window, hard block
+      // If user has exceeded limit significantly (3x+) within current window, suspend account
       if (windowAge < 60 && rlState.request_count >= 30) {
-        console.log(`Hard blocked repeat abuser: ${userId} (${rlState.request_count} requests in window)`);
+        console.log(`Suspending abusive user: ${userId} (${rlState.request_count} requests in window)`);
+        // Ban the user's account for 7 days using admin API
+        try {
+          const { error: banError } = await serviceClient.auth.admin.updateUserById(
+            userId,
+            { ban_duration: '168h' } // 7 days
+          );
+          if (banError) {
+            console.error(`Failed to ban user ${userId}:`, banError.message);
+          } else {
+            console.log(`Successfully banned user ${userId} for 7 days`);
+          }
+        } catch (banErr) {
+          console.error(`Error banning user ${userId}:`, banErr);
+        }
         return new Response(
-          JSON.stringify({ error: "You've been temporarily blocked due to excessive requests. Please wait 5 minutes before trying again." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: "Your account has been suspended due to abuse. Contact support if you believe this is an error." }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       // Escalated limit: if user has already hit 20+ requests (2x normal limit), apply stricter throttle
       if (windowAge < 60 && rlState.request_count >= 20) {
         console.log(`Escalated rate limit for user: ${userId} (${rlState.request_count} requests in window)`);
         return new Response(
-          JSON.stringify({ error: "Rate limit reached. You're sending too many requests. Please wait a few minutes before trying again." }),
+          JSON.stringify({ error: "You have been temporarily blocked due to excessive requests." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
