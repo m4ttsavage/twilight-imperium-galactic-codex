@@ -6,10 +6,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import FactionReference from "./pages/FactionReference";
 import FactionCompare from "./pages/FactionCompare";
-import MapGenerator from "./pages/MapGenerator";
+import CreateGame from "./pages/CreateGame";
+import GameLobby from "./pages/GameLobby";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import { Navigate } from "react-router-dom";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +25,9 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/factions" element={<FactionReference />} />
           <Route path="/factions/compare" element={<FactionCompare />} />
-          <Route path="/map" element={<MapGenerator />} />
+          <Route path="/game/new" element={<CreateGame />} />
+          <Route path="/game/:id" element={<GameLobby />} />
+          <Route path="/map" element={<Navigate to="/game/new" replace />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

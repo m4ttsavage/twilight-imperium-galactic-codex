@@ -69,7 +69,7 @@ const Profile = () => {
   };
 
   const handleViewMap = (mapString: string) => {
-    navigate(`/map?map=${encodeURIComponent(mapString)}`);
+    navigate(`/game/new?map=${encodeURIComponent(mapString)}`);
   };
 
   const handleSignOut = async () => {
@@ -142,10 +142,10 @@ const Profile = () => {
                 No games saved yet
               </p>
               <Link
-                to="/map"
+                to="/game/new"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider"
               >
-                Go to Map Generator
+                Create a Game
               </Link>
             </div>
           ) : (
