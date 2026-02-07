@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { RefreshCw, ExternalLink, Copy, Share2, Check, Gamepad2, Users, UserCog, LogIn } from "lucide-react";
@@ -12,7 +12,7 @@ import BalanceDropdown from "@/components/map/BalanceDropdown";
 import MapLegend from "@/components/map/MapLegend";
 import FloatingChat from "@/components/FloatingChat";
 import TopNav from "@/components/TopNav";
-import HostSetupPanel, { type PlayerAssignment } from "@/components/game/HostSetupPanel";
+import HostSetupPanel, { type PlayerAssignment, type InitialPlayerData } from "@/components/game/HostSetupPanel";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -42,6 +42,35 @@ const CreateGame = () => {
   const [setupMode, setSetupMode] = useState<SetupMode>("players_choose");
   const [hostValid, setHostValid] = useState(false);
   const hostAssignmentsRef = useRef<PlayerAssignment[]>([]);
+
+  // Read persisted faction/player data from codex page
+  const initialPlayerData = useMemo<InitialPlayerData[]>(() => {
+    try {
+      const raw = localStorage.getItem("ti4-game-setup");
+      if (!raw) return [];
+      const data = JSON.parse(raw);
+      const result: InitialPlayerData[] = [];
+      // Add selected faction with its nickname
+      if (data.selectedFaction) {
+        result.push({
+          factionName: data.selectedFaction,
+          playerName: data.nicknames?.[data.selectedFaction] || "",
+        });
+      }
+      // Add opponents with their nicknames
+      if (Array.isArray(data.opponents)) {
+        for (const opp of data.opponents) {
+          result.push({
+            factionName: opp,
+            playerName: data.nicknames?.[opp] || "",
+          });
+        }
+      }
+      return result;
+    } catch {
+      return [];
+    }
+  }, []);
 
   const handleAssignmentsChange = useCallback((assignments: PlayerAssignment[], valid: boolean) => {
     hostAssignmentsRef.current = assignments;
@@ -357,6 +386,17 @@ const CreateGame = () => {
               transition={{ duration: 0.4 }}
               className="space-y-3"
             >
+              {/* Host Setup Panel — above the map */}
+              {setupMode === "host_chooses" && user && (
+                <div className="rounded-xl border border-border bg-card/40 p-3">
+                  <HostSetupPanel
+                    playerCount={playerCount}
+                    initialData={initialPlayerData}
+                    onAssignmentsChange={handleAssignmentsChange}
+                  />
+                </div>
+              )}
+
               <div className="rounded-xl border border-border bg-card/40 p-2 overflow-hidden">
                 <HexMapBoard
                   map={map}
@@ -365,16 +405,6 @@ const CreateGame = () => {
                 />
               </div>
               <MapLegend />
-
-              {/* Host Setup Panel */}
-              {setupMode === "host_chooses" && user && (
-                <div className="mt-4 rounded-xl border border-border bg-card/40 p-4">
-                  <HostSetupPanel
-                    playerCount={playerCount}
-                    onAssignmentsChange={handleAssignmentsChange}
-                  />
-                </div>
-              )}
             </motion.div>
           )}
 
