@@ -24,6 +24,7 @@ interface GameData {
   status: string;
   draft_order: number[] | null;
   notes: string | null;
+  setup_mode: string;
 }
 
 const GameLobby = () => {
@@ -461,8 +462,15 @@ const GameLobby = () => {
                     🎉 Game Ready!
                   </h3>
                   <p className="text-[10px] font-body text-foreground/80">
-                    All factions, slices, and strategy cards have been assigned. The galaxy awaits!
+                    {game.setup_mode === "host_chooses"
+                      ? "All assignments were made by the host. The galaxy awaits!"
+                      : "All factions, slices, and strategy cards have been assigned. The galaxy awaits!"}
                   </p>
+                  {game.setup_mode === "host_chooses" && (
+                    <span className="inline-block text-[8px] font-display uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted/30 border border-border text-muted-foreground">
+                      Host Setup
+                    </span>
+                  )}
                 </div>
               )}
             </div>

@@ -95,6 +95,7 @@ export type Database = {
           notes: string | null
           played_at: string
           player_count: number
+          setup_mode: string
           status: string
           user_id: string
         }
@@ -106,6 +107,7 @@ export type Database = {
           notes?: string | null
           played_at?: string
           player_count: number
+          setup_mode?: string
           status?: string
           user_id: string
         }
@@ -117,6 +119,7 @@ export type Database = {
           notes?: string | null
           played_at?: string
           player_count?: number
+          setup_mode?: string
           status?: string
           user_id?: string
         }
