@@ -11,6 +11,8 @@ export interface GamePlayerInfo {
   strategy_card: number | null;
   draft_position: number | null;
   faction_locked: boolean;
+  placement: number | null;
+  victory_points: number | null;
 }
 
 interface Props {
@@ -112,10 +114,24 @@ const PlayerList = ({
             </div>
 
             {/* Status indicator */}
-            {isCurrentTurn && (
+            {gameStatus === "complete" && p.placement !== null && (
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <span className={`text-[9px] font-display uppercase tracking-wider px-1 py-0.5 rounded ${
+                  p.placement === 1
+                    ? "bg-gold/20 text-gold border border-gold/30"
+                    : "bg-muted/20 text-muted-foreground border border-border"
+                }`}>
+                  {p.placement === 1 ? "1st" : p.placement === 2 ? "2nd" : p.placement === 3 ? "3rd" : `${p.placement}th`}
+                </span>
+                <span className="text-[8px] font-body text-muted-foreground">
+                  {p.victory_points ?? 0}VP
+                </span>
+              </div>
+            )}
+            {gameStatus !== "complete" && isCurrentTurn && (
               <Clock className="w-3.5 h-3.5 text-gold animate-pulse flex-shrink-0" />
             )}
-            {!isCurrentTurn && gameStatus === "faction_draft" && p.faction_locked && (
+            {gameStatus !== "complete" && !isCurrentTurn && gameStatus === "faction_draft" && p.faction_locked && (
               <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
             )}
           </div>
