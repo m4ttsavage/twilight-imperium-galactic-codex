@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Gamepad2, Share2, Check, Copy, Users, LogIn, Trash2 } from "lucide-react";
+import { Gamepad2, Share2, Check, Copy, Users, LogIn, Trash2, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { parseMapString, type GeneratedMap } from "@/lib/map-data";
@@ -201,6 +201,30 @@ const GameLobby = () => {
     }
   };
 
+  // Revert game from complete back to ready (host only)
+  const handleRevertToReady = async () => {
+    if (!gameId || !game) return;
+    try {
+      // Clear placement and VP for all players
+      for (const p of players) {
+        const { error } = await supabase
+          .from("game_players")
+          .update({ placement: null, victory_points: null } as any)
+          .eq("id", p.id);
+        if (error) throw error;
+      }
+      // Set status back to ready, clear notes
+      const { error } = await supabase
+        .from("games")
+        .update({ status: "ready", notes: null } as any)
+        .eq("id", gameId);
+      if (error) throw error;
+      toast.success("Game reverted to In Progress");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to revert game");
+    }
+  };
+
   // Faction draft: lock in preferences
   const handleFactionSubmit = async (pref1: string, pref2: string, pref3: string) => {
     if (!myPlayer) return;
@@ -364,7 +388,7 @@ const GameLobby = () => {
     faction_draft: "Faction Draft",
     slice_draft: "Slice Draft",
     strategy_draft: "Strategy Draft",
-    ready: "Game Ready",
+    ready: "In Progress",
     complete: "Completed",
   };
 
@@ -550,7 +574,7 @@ const GameLobby = () => {
                 <div className="space-y-4">
                   <div className="rounded-lg border border-teal/30 bg-teal/5 p-4 space-y-2">
                     <h3 className="font-display text-xs tracking-widest uppercase text-teal">
-                      🎉 Game Ready!
+                      🎉 Game In Progress
                     </h3>
                     <p className="text-[10px] font-body text-foreground/80">
                       {game.setup_mode === "host_chooses"
@@ -574,10 +598,21 @@ const GameLobby = () => {
               )}
 
               {game.status === "complete" && (
-                <GameCompleteSummary
-                  players={players}
-                  notes={game.notes}
-                />
+                <div className="space-y-3">
+                  <GameCompleteSummary
+                    players={players}
+                    notes={game.notes}
+                  />
+                  {isHost && (
+                    <button
+                      onClick={handleRevertToReady}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-muted/20 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors text-[10px] font-display uppercase tracking-wider"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      Revert to In Progress
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
