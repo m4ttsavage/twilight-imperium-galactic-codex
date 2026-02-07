@@ -12,7 +12,6 @@ import SystemBankSelector from "@/components/map/SystemBankSelector";
 import BalanceDropdown from "@/components/map/BalanceDropdown";
 import MapLegend from "@/components/map/MapLegend";
 import FloatingChat from "@/components/FloatingChat";
-import { useIsMobile } from "@/hooks/use-mobile";
 import TopNav from "@/components/TopNav";
 import HostSetupPanel, { type PlayerAssignment, type InitialPlayerData } from "@/components/game/HostSetupPanel";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,7 +23,6 @@ type SetupMode = "players_choose" | "host_chooses";
 
 const CreateGame = () => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const { user, loading: authLoading } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [playerCount, setPlayerCount] = useState(6);
