@@ -142,24 +142,51 @@ serve(async (req) => {
     const userId = claimsData.claims.sub;
     console.log(`Authenticated user: ${userId}`);
 
-    // --- Rate Limiting (30 requests per 60 seconds per user) ---
+    // --- Rate Limiting (10 requests per 60 seconds, escalating penalties) ---
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Check for repeat abuse by reading current rate limit state
+    const { data: rlState, error: rlReadErr } = await serviceClient
+      .from("chat_rate_limits")
+      .select("request_count, window_start")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!rlReadErr && rlState) {
+      const windowAge = (Date.now() - new Date(rlState.window_start).getTime()) / 1000;
+      // If user has exceeded limit significantly (3x+) within current window, hard block
+      if (windowAge < 60 && rlState.request_count >= 30) {
+        console.log(`Hard blocked repeat abuser: ${userId} (${rlState.request_count} requests in window)`);
+        return new Response(
+          JSON.stringify({ error: "You've been temporarily blocked due to excessive requests. Please wait 5 minutes before trying again." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      // Escalated limit: if user has already hit 20+ requests (2x normal limit), apply stricter throttle
+      if (windowAge < 60 && rlState.request_count >= 20) {
+        console.log(`Escalated rate limit for user: ${userId} (${rlState.request_count} requests in window)`);
+        return new Response(
+          JSON.stringify({ error: "Rate limit reached. You're sending too many requests. Please wait a few minutes before trying again." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     const { data: allowed, error: rlError } = await serviceClient.rpc(
       "check_chat_rate_limit",
-      { _user_id: userId, _max_requests: 30, _window_seconds: 60 }
+      { _user_id: userId, _max_requests: 10, _window_seconds: 60 }
     );
 
     if (rlError) {
       console.error("Rate limit check error:", rlError.message);
       // Fail open on rate limit errors to avoid blocking users due to DB issues
     } else if (allowed === false) {
-      console.log(`Rate limited user: ${userId}`);
+      console.log(`Rate limited user: ${userId} (base limit of 10/60s)`);
       return new Response(
-        JSON.stringify({ error: "Rate limit reached. Please wait a moment before sending another message." }),
+        JSON.stringify({ error: "Rate limit reached. Please wait a minute before sending another message." }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
