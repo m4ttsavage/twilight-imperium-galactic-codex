@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { GitCompareArrows } from "lucide-react";
+import { GitCompareArrows, ArrowLeft } from "lucide-react";
 import type { FactionDetail } from "@/lib/faction-details";
 import FactionCompareSelector from "@/components/FactionCompareSelector";
 import ComparisonColumn from "@/components/ComparisonColumn";
@@ -34,6 +35,13 @@ const FactionCompare = () => {
         >
 
           <div className="flex items-center gap-3 mb-4">
+            <Link
+              to="/factions"
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Factions
+            </Link>
             <div className="w-9 h-9 rounded-lg bg-gold/10 border border-gold/30 flex items-center justify-center glow-gold">
               <GitCompareArrows className="w-5 h-5 text-gold" />
             </div>
