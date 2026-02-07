@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { RefreshCw, ExternalLink, Copy, Share2, Check, Gamepad2, Users, UserCog } from "lucide-react";
+import { RefreshCw, ExternalLink, Copy, Share2, Check, Gamepad2, Users, UserCog, LogIn } from "lucide-react";
 import { generateMap, getSupportedPlayerCounts, parseMapString, exportMapString, type GeneratedMap } from "@/lib/map-data";
 import { getTilesForBanks, type TileBank } from "@/lib/tile-database";
 import { improveBalance } from "@/lib/map-balance";
@@ -319,9 +319,13 @@ const CreateGame = () => {
                 </span>
               )}
               {!user && !authLoading && (
-                <span className="text-[9px] font-body text-muted-foreground italic">
-                  Sign in to create a game
-                </span>
+                <button
+                  onClick={() => navigate("/auth")}
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gold/20 border border-gold/30 text-gold hover:bg-gold/30 transition-colors text-[10px] font-display uppercase tracking-wider animate-pulse hover:animate-none"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  Sign in to set up games & track results
+                </button>
               )}
             </div>
           </div>
