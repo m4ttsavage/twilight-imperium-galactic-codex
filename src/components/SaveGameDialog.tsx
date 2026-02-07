@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { exportMapString, type GeneratedMap } from "@/lib/map-data";
+import { generateGameName } from "@/lib/game-names";
 import { toast } from "sonner";
 
 interface Props {
@@ -65,7 +66,8 @@ const SaveGameDialog = ({ map, sliceFactions, sliceNicknames }: Props) => {
           map_string: mapString,
           player_count: map.playerCount,
           notes: notes || null,
-        })
+          name: generateGameName(),
+        } as any)
         .select("id")
         .single();
 

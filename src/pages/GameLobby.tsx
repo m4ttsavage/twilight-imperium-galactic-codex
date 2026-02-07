@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Gamepad2, Share2, Check, Copy, Users, LogIn, Trash2, RotateCcw } from "lucide-react";
+import { Gamepad2, Share2, Check, Copy, Users, LogIn, Trash2, RotateCcw, ClipboardCopy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { parseMapString, type GeneratedMap } from "@/lib/map-data";
@@ -39,6 +39,7 @@ interface GameData {
   draft_order: number[] | null;
   notes: string | null;
   setup_mode: string;
+  name: string | null;
 }
 
 const GameLobby = () => {
@@ -51,6 +52,7 @@ const GameLobby = () => {
   const [loadingGame, setLoadingGame] = useState(true);
   const [fateMessages, setFateMessages] = useState<FateMessageType[]>([]);
   const [copied, setCopied] = useState(false);
+  const [copiedMap, setCopiedMap] = useState(false);
   const [joining, setJoining] = useState(false);
 
   const parsedMap = useMemo<GeneratedMap | null>(() => {
@@ -152,6 +154,16 @@ const GameLobby = () => {
       setCopied(true);
       toast.success("Game link copied!");
       setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  // Export map string
+  const handleExportMap = () => {
+    if (!game) return;
+    navigator.clipboard.writeText(game.map_string).then(() => {
+      setCopiedMap(true);
+      toast.success("Map string copied to clipboard");
+      setTimeout(() => setCopiedMap(false), 2000);
     });
   };
 
@@ -424,7 +436,12 @@ const GameLobby = () => {
               <h1 className="font-display text-sm tracking-widest text-foreground uppercase">
                 Game Lobby
               </h1>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {game.name && (
+                  <span className="text-[10px] font-body text-gold/80 tracking-wide italic">
+                    {game.name}
+                  </span>
+                )}
                 <span className="text-[10px] font-body text-muted-foreground tracking-wide">
                   {game.player_count} players
                 </span>
@@ -458,6 +475,13 @@ const GameLobby = () => {
                   </AlertDialogContent>
                 </AlertDialog>
               )}
+              <button
+                onClick={handleExportMap}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider"
+              >
+                {copiedMap ? <Check className="w-3 h-3 text-green-400" /> : <ClipboardCopy className="w-3 h-3" />}
+                {copiedMap ? "Copied" : "Export Map"}
+              </button>
               <button
                 onClick={handleCopyLink}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider"

@@ -146,6 +146,7 @@ export type Database = {
           draft_order: number[] | null
           id: string
           map_string: string
+          name: string | null
           notes: string | null
           played_at: string
           player_count: number
@@ -158,6 +159,7 @@ export type Database = {
           draft_order?: number[] | null
           id?: string
           map_string: string
+          name?: string | null
           notes?: string | null
           played_at?: string
           player_count: number
@@ -170,6 +172,7 @@ export type Database = {
           draft_order?: number[] | null
           id?: string
           map_string?: string
+          name?: string | null
           notes?: string | null
           played_at?: string
           player_count?: number
