@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, X, Shield, Swords, UserPen } from "lucide-react";
+import { ChevronDown, X, Shield, Swords, UserPen, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TI4_FACTIONS, type Faction } from "@/lib/factions";
 interface FactionSelectorProps {
@@ -10,6 +10,7 @@ interface FactionSelectorProps {
   onFactionChange: (faction: string | null) => void;
   onOpponentsChange: (opponents: string[]) => void;
   onNicknamesChange: (nicknames: Record<string, string>) => void;
+  defaultNickname?: string;
 }
 const FactionSelector = ({
   selectedFaction,
@@ -18,11 +19,20 @@ const FactionSelector = ({
   onFactionChange,
   onOpponentsChange,
   onNicknamesChange,
+  defaultNickname,
 }: FactionSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"my" | "opponents">("my");
   const [editingNickname, setEditingNickname] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const selectedFactionData = TI4_FACTIONS.find((f) => f.name === selectedFaction);
+
+  // Auto-fill nickname from profile display name when selecting "My Faction"
+  useEffect(() => {
+    if (selectedFaction && defaultNickname && !nicknames[selectedFaction]) {
+      onNicknamesChange({ ...nicknames, [selectedFaction]: defaultNickname });
+    }
+  }, [selectedFaction, defaultNickname]);
   const toggleOpponent = (factionName: string) => {
     if (factionName === selectedFaction) return;
     if (opponents.includes(factionName)) {
@@ -134,6 +144,21 @@ const FactionSelector = ({
               </button>
             </div>
 
+            {/* Search */}
+            <div className="p-2 border-b border-border">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Search factions…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-7 pr-3 py-1.5 rounded-lg bg-muted/40 border border-border text-xs font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-teal/40 transition-colors"
+                />
+              </div>
+            </div>
+
             {/* Faction Grid */}
             <div className="p-3 max-h-80 overflow-y-auto">
               {activeTab === "my" && (
@@ -165,9 +190,11 @@ const FactionSelector = ({
                     factions={TI4_FACTIONS}
                     selected={selectedFaction ? [selectedFaction] : []}
                     disabled={[]}
+                    search={search}
                     onToggle={(name) => {
                       onFactionChange(name);
                       setActiveTab("opponents");
+                      setSearch("");
                     }}
                   />
                 </div>
@@ -208,6 +235,7 @@ const FactionSelector = ({
                     factions={TI4_FACTIONS}
                     selected={opponents}
                     disabled={selectedFaction ? [selectedFaction] : []}
+                    search={search}
                     onToggle={toggleOpponent}
                   />
                 </div>
@@ -250,42 +278,60 @@ function FactionList({
   factions,
   selected,
   disabled,
+  search,
   onToggle,
 }: {
   factions: Faction[];
   selected: string[];
   disabled: string[];
+  search: string;
   onToggle: (name: string) => void;
 }) {
-  const baseFactions = factions.filter((f) => f.expansion === "base");
-  const pokFactions = factions.filter((f) => f.expansion === "pok");
-  const teFactions = factions.filter((f) => f.expansion === "te");
+  const query = search.toLowerCase();
+  const filtered = query
+    ? factions.filter(
+        (f) =>
+          f.name.toLowerCase().includes(query) ||
+          f.shortName.toLowerCase().includes(query),
+      )
+    : factions;
+  const baseFactions = filtered.filter((f) => f.expansion === "base");
+  const pokFactions = filtered.filter((f) => f.expansion === "pok");
+  const teFactions = filtered.filter((f) => f.expansion === "te");
   return (
     <div className="space-y-3">
-      <ExpansionGroup
-        label="Base Game"
-        labelColor="text-muted-foreground"
-        factions={baseFactions}
-        selected={selected}
-        disabled={disabled}
-        onToggle={onToggle}
-      />
-      <ExpansionGroup
-        label="Prophecy of Kings"
-        labelColor="text-muted-foreground"
-        factions={pokFactions}
-        selected={selected}
-        disabled={disabled}
-        onToggle={onToggle}
-      />
-      <ExpansionGroup
-        label="Thunder's Edge"
-        labelColor="text-teal"
-        factions={teFactions}
-        selected={selected}
-        disabled={disabled}
-        onToggle={onToggle}
-      />
+      {filtered.length === 0 ? (
+        <p className="text-xs text-muted-foreground font-body p-3 text-center">
+          No factions found
+        </p>
+      ) : (
+        <>
+          <ExpansionGroup
+            label="Base Game"
+            labelColor="text-muted-foreground"
+            factions={baseFactions}
+            selected={selected}
+            disabled={disabled}
+            onToggle={onToggle}
+          />
+          <ExpansionGroup
+            label="Prophecy of Kings"
+            labelColor="text-muted-foreground"
+            factions={pokFactions}
+            selected={selected}
+            disabled={disabled}
+            onToggle={onToggle}
+          />
+          <ExpansionGroup
+            label="Thunder's Edge"
+            labelColor="text-teal"
+            factions={teFactions}
+            selected={selected}
+            disabled={disabled}
+            onToggle={onToggle}
+          />
+        </>
+      )}
     </div>
   );
 }
