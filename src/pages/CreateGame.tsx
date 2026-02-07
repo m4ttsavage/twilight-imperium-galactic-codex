@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Map, RefreshCw, ExternalLink, Copy, Share2, Check, Gamepad2 } from "lucide-react";
+import { RefreshCw, ExternalLink, Copy, Share2, Check, Gamepad2, Users, UserCog } from "lucide-react";
 import { generateMap, getSupportedPlayerCounts, parseMapString, exportMapString, type GeneratedMap } from "@/lib/map-data";
 import { getTilesForBanks, type TileBank } from "@/lib/tile-database";
 import { improveBalance } from "@/lib/map-balance";
@@ -12,10 +12,13 @@ import BalanceDropdown from "@/components/map/BalanceDropdown";
 import MapLegend from "@/components/map/MapLegend";
 import FloatingChat from "@/components/FloatingChat";
 import TopNav from "@/components/TopNav";
+import HostSetupPanel, { type PlayerAssignment } from "@/components/game/HostSetupPanel";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import heroBg from "@/assets/hero-bg.jpg";
+
+type SetupMode = "players_choose" | "host_chooses";
 
 const CreateGame = () => {
   const navigate = useNavigate();
@@ -36,6 +39,14 @@ const CreateGame = () => {
   const [shared, setShared] = useState(false);
   const [enabledBanks, setEnabledBanks] = useState<TileBank[]>(["base", "pok", "te"]);
   const [creating, setCreating] = useState(false);
+  const [setupMode, setSetupMode] = useState<SetupMode>("players_choose");
+  const [hostValid, setHostValid] = useState(false);
+  const hostAssignmentsRef = useRef<PlayerAssignment[]>([]);
+
+  const handleAssignmentsChange = useCallback((assignments: PlayerAssignment[], valid: boolean) => {
+    hostAssignmentsRef.current = assignments;
+    setHostValid(valid);
+  }, []);
 
   const getFilteredTiles = useCallback(() => {
     return getTilesForBanks(enabledBanks);
@@ -91,6 +102,60 @@ const CreateGame = () => {
 
   const handleCreateGame = async () => {
     if (!map || !user) return;
+
+    if (setupMode === "host_chooses") {
+      const assignments = hostAssignmentsRef.current;
+      if (!hostValid) {
+        toast.error("Please fill in all player assignments before creating the game.");
+        return;
+      }
+
+      setCreating(true);
+      try {
+        const mapString = exportMapString(map);
+        const { data: game, error } = await supabase
+          .from("games")
+          .insert({
+            user_id: user.id,
+            map_string: mapString,
+            player_count: map.playerCount,
+            status: "ready",
+            setup_mode: "host_chooses",
+          } as any)
+          .select("id")
+          .single();
+
+        if (error) throw error;
+
+        // Insert all player rows
+        const playerRows = assignments.map((a) => ({
+          game_id: game.id,
+          nickname: a.name.trim(),
+          email: a.email.trim() || null,
+          faction_name: a.factionName,
+          slice_index: a.sliceIndex,
+          strategy_card: a.strategyCard,
+          faction_locked: true,
+          player_user_id: null, // trigger will auto-resolve by email
+        }));
+
+        const { error: insertError } = await supabase
+          .from("game_players")
+          .insert(playerRows as any);
+
+        if (insertError) throw insertError;
+
+        toast.success("Game created with all assignments!");
+        navigate(`/game/${game.id}`);
+      } catch (err: any) {
+        toast.error(err.message || "Failed to create game");
+      } finally {
+        setCreating(false);
+      }
+      return;
+    }
+
+    // Players Choose mode (existing behavior)
     setCreating(true);
     try {
       const mapString = exportMapString(map);
@@ -101,6 +166,7 @@ const CreateGame = () => {
           map_string: mapString,
           player_count: map.playerCount,
           status: "faction_draft",
+          setup_mode: "players_choose",
         } as any)
         .select("id")
         .single();
@@ -113,7 +179,7 @@ const CreateGame = () => {
         .insert({
           game_id: game.id,
           player_user_id: user.id,
-          slice_index: -1, // Not yet assigned
+          slice_index: -1,
           nickname: null,
         } as any);
 
@@ -127,6 +193,8 @@ const CreateGame = () => {
       setCreating(false);
     }
   };
+
+  const isHostChoosesValid = setupMode === "host_chooses" ? hostValid : true;
 
   return (
     <div className="relative flex flex-col h-screen overflow-hidden bg-background">
@@ -155,6 +223,37 @@ const CreateGame = () => {
               </p>
             </div>
           </div>
+
+          {/* Setup Mode Toggle */}
+          {user && (
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] font-display uppercase tracking-widest text-muted-foreground">
+                Setup
+              </span>
+              <button
+                onClick={() => setSetupMode("players_choose")}
+                className={`flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-lg font-body transition-colors ${
+                  setupMode === "players_choose"
+                    ? "bg-gold/20 text-gold border border-gold/30"
+                    : "bg-muted/30 text-muted-foreground border border-transparent hover:text-foreground"
+                }`}
+              >
+                <Users className="w-3 h-3" />
+                Players Choose
+              </button>
+              <button
+                onClick={() => setSetupMode("host_chooses")}
+                className={`flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-lg font-body transition-colors ${
+                  setupMode === "host_chooses"
+                    ? "bg-gold/20 text-gold border border-gold/30"
+                    : "bg-muted/30 text-muted-foreground border border-transparent hover:text-foreground"
+                }`}
+              >
+                <UserCog className="w-3 h-3" />
+                Host Chooses
+              </button>
+            </div>
+          )}
 
           {/* Controls */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -214,6 +313,11 @@ const CreateGame = () => {
                   {creating ? "Creating…" : "Create Game"}
                 </button>
               )}
+              {setupMode === "host_chooses" && !hostValid && map && user && (
+                <span className="text-[9px] font-body text-muted-foreground italic">
+                  Fill in all assignments to create
+                </span>
+              )}
               {!user && !authLoading && (
                 <span className="text-[9px] font-body text-muted-foreground italic">
                   Sign in to create a game
@@ -241,6 +345,16 @@ const CreateGame = () => {
                 />
               </div>
               <MapLegend />
+
+              {/* Host Setup Panel */}
+              {setupMode === "host_chooses" && user && (
+                <div className="mt-4 rounded-xl border border-border bg-card/40 p-4">
+                  <HostSetupPanel
+                    playerCount={playerCount}
+                    onAssignmentsChange={handleAssignmentsChange}
+                  />
+                </div>
+              )}
             </motion.div>
           )}
 
