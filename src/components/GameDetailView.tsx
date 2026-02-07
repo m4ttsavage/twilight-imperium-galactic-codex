@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { parseMapString, type GeneratedMap } from "@/lib/map-data";
 import HexMapBoard from "@/components/map/HexMapBoard";
+import MapLegend from "@/components/map/MapLegend";
 import { Map } from "lucide-react";
 
 interface GamePlayer {
@@ -56,6 +57,7 @@ const GameDetailView = ({ mapString, players }: Props) => {
       <div className="rounded-lg border border-border bg-card/30 p-1.5 overflow-hidden">
         <HexMapBoard map={parsed} sliceFactions={sliceFactions} />
       </div>
+      <MapLegend />
     </div>
   );
 };
