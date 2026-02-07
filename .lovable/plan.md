@@ -1,211 +1,130 @@
 
 
-# Multiplayer Game Lobby with Ranked Choice Faction Draft and Snake Draft
+# Add "Host Chooses" Mode to Game Setup
 
 ## Overview
 
-This plan transforms the current single-player Map Generator into a full multiplayer game lobby system. The host creates a game with a generated map, shares a URL, and players join to draft factions, slices, and strategy cards across three sequential phases -- all synchronized in real time.
+This adds a toggle on the Create Game page that lets the host choose between two setup modes:
+
+- **Players Choose** (existing behavior) -- players join via URL and go through the faction draft, slice draft, and strategy draft phases.
+- **Host Chooses** -- the host manually assigns all players (names and emails), factions, slices, and strategy cards before creating the game. The game is created in the "ready" state, skipping all draft phases entirely.
 
 ---
 
-## What You'll Experience
+## What You'll See
 
-### As the Host
-1. Go to **"Create Game"** (renamed from "Map")
-2. Pick player count, generate and balance a map
-3. Click **"Create Game"** -- saves to database, generates a shareable URL
-4. Share that URL with your friends
-5. Watch players join, then the draft begins automatically
+### On the Create Game Page
 
-### As a Player
-1. Open the shared game URL
-2. Log in (or create an account)
-3. **Phase 1 -- Faction Draft**: Rank your top 3 faction choices. Once everyone has submitted, ties are resolved with ranked-choice runoff. If two players rank the same faction equally, fate (RNG) decides with a funny message like: *"Fate has decreed that Alex shall command The Xxcha Kingdom. Sorry Jordan -- RNGesus has chosen The Winnu for you instead."*
-4. **Phase 2 -- Slice Draft**: Pick your starting slice in a randomized sequential order. Each pick requires confirmation: *"Final answer -- this can't be changed once the next selection is made."*
-5. **Phase 3 -- Strategy Draft**: Pick your strategy card in reverse (snake) order of the slice draft.
-6. **Game Ready**: View the final board with all assignments.
+After generating a map, the host sees a new toggle/selector:
 
-### As a Spectator
-- Anyone with the link can view the game lobby read-only without logging in
-- See the map, joined players, and all draft results as they happen
-- Cannot make any selections
+```
+Setup Mode:  [Players Choose]  [Host Chooses]
+```
 
----
+When **Host Chooses** is selected, a new panel appears below the map with:
 
-## Draft Mechanics in Detail
+1. **Player Rows** -- One row per player slot (based on the selected player count). Each row has:
+   - Name input (required)
+   - Email input (optional -- used to link the player to their account if they have one)
+   - Faction dropdown (select from all available factions)
+   - Slice dropdown (select A, B, C, etc.)
+   - Strategy card dropdown (select from the 8 strategy cards)
 
-### Phase 1: Ranked Choice Faction Draft (Simultaneous)
+2. **Validation** -- The "Create Game" button is disabled until:
+   - Every player has a name
+   - Every player has a unique faction assigned
+   - Every player has a unique slice assigned
+   - Every player has a unique strategy card assigned
 
-Every player submits their top 3 faction preferences in order:
-- **Choice 1** = most wanted, **Choice 2** = backup, **Choice 3** = fallback
-- Once ALL players have locked in, the system resolves assignments:
-  1. Process Choice 1 for all players. If a faction is only wanted by one player, they get it.
-  2. If multiple players have the same Choice 1, run instant-runoff: compare their next-ranked choice. If still tied at all ranks, RNG breaks it.
-  3. The "loser" of each conflict gets their next available ranked choice.
-  4. Display a themed message for each RNG resolution.
-- Each player confirms their result before the lobby advances.
+3. **Create Game** -- When clicked, saves the game with status "ready" and inserts all game_players with their full assignments. The host is redirected to the Game Lobby which shows the final board.
 
-### Phase 2: Slice Draft (Sequential, Random Order)
+### On the Game Lobby Page
 
-- The system generates a random draft order (e.g., Player 3 -> Player 1 -> Player 4 -> Player 2)
-- Players pick in turn order. The UI highlights whose turn it is.
-- After selecting, a confirmation dialog appears: "Final answer -- this can't be changed once the next selection is made: Yes / No"
-- The selection remains editable until the player confirms, at which point the next player's turn begins.
-- Auto-advances to Phase 3 when the last slice is confirmed.
-
-### Phase 3: Strategy Draft (Sequential, Inverse/Snake Order)
-
-- Turn order is the **reverse** of the slice draft order (snake draft)
-  - Example: If slice order was [3, 1, 4, 2], strategy order is [2, 4, 1, 3]
-- Each player picks one of the 8 strategy cards (Leadership, Diplomacy, Politics, Construction, Trade, Warfare, Technology, Imperial)
-- Strategy card details are shown inline for reference
-- Same confirmation flow as slice draft
-- Auto-advances to "Game Ready" when complete
+Games created in "Host Chooses" mode show up in the "Game Ready" state immediately. The map displays all assigned factions and player names on their homeworld tiles. No draft UI is shown.
 
 ---
 
-## Page Changes
+## Database Changes
 
-### Home ("/") becomes "Codex"
-- Shows only the AI chatbot (ChatInterface)
-- NavLink label changes from "Home" to "Codex"
-- The FactionSelector component is removed from this page (it moves to the game lobby)
+A new column on the `games` table:
 
-### Map ("/map") becomes "Create Game" ("/game/new")
-- Same map generation tools (player count, tile banks, balance, regenerate)
-- Removes slice assignment panel (that's now part of the lobby draft)
-- Adds a "Create Game" button that saves to the database and redirects to `/game/{id}`
-- The old `/map` route redirects to `/game/new` for backwards compatibility
-- Import and share-by-URL features remain for standalone map viewing
+- `setup_mode` (text, NOT NULL, default `'players_choose'`): Either `'players_choose'` or `'host_chooses'`
 
-### New: Game Lobby ("/game/:id")
-- The central multiplayer page
-- Shows the hex map (read-only, rendered from saved map_string)
-- Player list sidebar showing who has joined, whose turn it is
-- Phase-specific panels: faction ranking form, slice picker, strategy picker
-- Real-time updates via database realtime subscriptions
-- Spectators see everything but have no interactive controls
+This column is used to distinguish how the game was created, which can be useful for the lobby display (e.g., showing "Setup by host" vs. "Drafted by players").
 
-### New: Strategy Card Reference
-- Embedded within the game lobby's strategy draft phase
-- Shows card number, name, primary ability, and secondary ability for each of the 8 cards
-- Also accessible as a standalone reference section
+Additionally, the existing RLS policy "Users can insert their game players" (`is_game_owner(game_id)`) already allows the host to insert game_players rows on behalf of other players, so no RLS changes are needed.
 
 ---
 
 ## Technical Details
 
-### Database Schema Changes
+### New Component
 
-**`games` table -- new columns:**
-- `status` (text, NOT NULL, default `'setup'`): One of `setup`, `faction_draft`, `slice_draft`, `strategy_draft`, `ready`
-- `draft_order` (integer array, nullable): The randomized player order for slice selection, stored as `[2,0,3,1]`
+**`src/components/game/HostSetupPanel.tsx`**
 
-**`game_players` table -- new columns:**
-- `strategy_card` (integer, nullable): The chosen strategy card number (1-8)
-- `draft_position` (integer, nullable): This player's position in the slice draft order
-- `joined_at` (timestamptz, default now()): When they joined the lobby
-- `faction_pref_1` (text, nullable): First choice faction name
-- `faction_pref_2` (text, nullable): Second choice faction name
-- `faction_pref_3` (text, nullable): Third choice faction name
-- `faction_locked` (boolean, default false): Whether the player has submitted their faction preferences
-
-**RLS policy updates:**
-- Any authenticated user can VIEW games and game_players (for joining and spectating)
-- Authenticated users can INSERT themselves into game_players (join a game)
-- Players can UPDATE their own row (picks and preferences)
-- Host can UPDATE game status and draft_order
-- Existing restrictive policies for owner-only operations remain
-
-**Realtime:**
-- Enable realtime on both `games` and `game_players` tables so all connected clients see live draft updates
-
-### New Files
-
-| File | Purpose |
-|------|---------|
-| `src/lib/strategy-cards.ts` | Data for the 8 TI4 strategy cards (number, name, primary ability, secondary ability) |
-| `src/pages/CreateGame.tsx` | Refactored from MapGenerator -- map gen tools + "Create Game" button |
-| `src/pages/GameLobby.tsx` | The multiplayer draft lobby page with realtime sync |
-| `src/components/game/FactionDraftPanel.tsx` | UI for ranking top 3 faction preferences |
-| `src/components/game/SliceDraftPanel.tsx` | UI for sequential slice picking with confirmation |
-| `src/components/game/StrategyDraftPanel.tsx` | UI for sequential strategy card picking |
-| `src/components/game/StrategyCardInfo.tsx` | Reference card showing strategy card details |
-| `src/components/game/PlayerList.tsx` | Shows joined players, turn indicators, draft status |
-| `src/components/game/DraftConfirmDialog.tsx` | "Final answer" confirmation dialog reused across phases |
-| `src/components/game/FateMessage.tsx` | Animated display for RNG resolution messages |
-| `src/lib/draft-resolver.ts` | Logic for ranked-choice resolution and RNG tiebreaking |
+A form panel rendered on the Create Game page when "Host Chooses" mode is selected. Contains:
+- A list of player rows (one per player count)
+- Each row: name input, email input, faction select, slice select, strategy card select
+- Validation logic to prevent duplicates across rows
+- Returns the complete player assignments to the parent
 
 ### Modified Files
 
-| File | Changes |
-|------|---------|
-| `src/App.tsx` | Add routes: `/game/new`, `/game/:id`. Redirect `/map` to `/game/new` |
-| `src/components/TopNav.tsx` | Rename "Home" to "Codex", rename "Map" to "Create Game", update paths |
-| `src/pages/Index.tsx` | Already just the chatbot -- no changes needed |
-| `src/pages/Profile.tsx` | Update "Go to Map Generator" link to point to `/game/new` |
-| `src/pages/MapGenerator.tsx` | Renamed/replaced by `CreateGame.tsx` |
+**`src/pages/CreateGame.tsx`**
+- Add a `setupMode` state: `'players_choose' | 'host_chooses'`
+- Render a toggle/selector for the mode
+- When `host_chooses`, render `HostSetupPanel` below the map
+- When `host_chooses`, the `handleCreateGame` function:
+  - Creates the game with `status: 'ready'` and `setup_mode: 'host_chooses'`
+  - Inserts all game_players rows with faction, slice, and strategy card pre-filled
+  - Sets `player_user_id` to null for non-host players (the `resolve_player_user_on_insert` trigger will auto-link by email if matched)
+  - The host's own row uses their `user.id` as `player_user_id`
 
-### Draft Resolution Logic (src/lib/draft-resolver.ts)
+**`src/pages/GameLobby.tsx`**
+- Add `setup_mode` to the `GameData` interface
+- Minor display tweak: if `setup_mode === 'host_chooses'`, the status label can say "Game Ready (Host Setup)" or similar
 
-```text
-Input: Array of players, each with [pref1, pref2, pref3]
+**`src/components/game/PlayerList.tsx`**
+- No functional changes needed -- it already displays faction, strategy card, and nicknames from the data
 
-Algorithm:
-1. Build a map: faction -> list of players who ranked it #1
-2. For each faction with exactly one claimant: assign it, remove player from pool
-3. For each faction with multiple claimants:
-   a. Compare their rank for this faction (all rank 1 at this point since we process round by round)
-   b. Check if one player has it ranked higher than others -- if so, they win
-   c. If tied at same rank: random selection
-   d. Winner gets the faction
-   e. Loser falls through to their next available preference
-4. Repeat until all players assigned
-5. Return assignments + list of "fate messages" for any RNG resolutions
+### Database Migration
 
-Output: 
-  - assignments: { playerId: factionName }
-  - fateMessages: [{ winner, loser, winnerFaction, loserFaction, message }]
+```sql
+ALTER TABLE games
+  ADD COLUMN setup_mode text NOT NULL DEFAULT 'players_choose';
 ```
 
-### Realtime Subscription Pattern
+### Validation Rules (Client-Side)
+
+- No two players can have the same faction
+- No two players can have the same slice index
+- No two players can have the same strategy card
+- Every player must have a name
+- Faction, slice, and strategy selections are all required before the "Create Game" button enables
+
+### Data Flow for Host Chooses
 
 ```text
-GameLobby subscribes to:
-  - games table (filter: id = current game) -- for status changes
-  - game_players table (filter: game_id = current game) -- for joins and picks
-
-On each change:
-  - Re-fetch full game state
-  - Determine current phase, whose turn it is
-  - Update UI accordingly
-  - Auto-advance phase when all picks are complete
+1. Host generates map (e.g., 4 players)
+2. Host selects "Host Chooses" mode
+3. Host fills in 4 player rows:
+   - Player 1: "Alice", alice@email.com, Sol, Slice A, Leadership
+   - Player 2: "Bob", bob@email.com, Hacan, Slice B, Trade
+   - Player 3: "Carol", carol@email.com, Xxcha, Slice C, Diplomacy
+   - Player 4: "Dave", dave@email.com, L1Z1X, Slice D, Warfare
+4. Host clicks "Create Game"
+5. System creates:
+   - games row: status='ready', setup_mode='host_chooses'
+   - 4 game_players rows with all fields populated
+   - Host's row (matching email) gets player_user_id set
+   - Other rows get player_user_id auto-resolved via trigger
+6. Redirect to /game/{id} showing the completed board
 ```
 
 ### Implementation Sequence
 
-**Phase A -- Foundation**
-1. Database migration: add new columns to `games` and `game_players`, update RLS, enable realtime
-2. Create `src/lib/strategy-cards.ts` with the 8 strategy card data
-3. Create `src/lib/draft-resolver.ts` with ranked-choice resolution logic
-4. Rename navigation labels in TopNav ("Codex", "Create Game")
-
-**Phase B -- Create Game Flow**
-5. Build `CreateGame.tsx` (adapted from MapGenerator) with "Create Game" button
-6. Update `App.tsx` routes: `/game/new`, `/game/:id`, redirect `/map`
-7. Update Profile page links
-
-**Phase C -- Game Lobby**
-8. Build `GameLobby.tsx` with realtime subscriptions and phase management
-9. Build `PlayerList.tsx` component
-10. Build `FactionDraftPanel.tsx` with ranked choice UI
-11. Build `DraftConfirmDialog.tsx` for "Final answer" confirmations
-12. Build `FateMessage.tsx` for animated RNG resolution messages
-13. Build `SliceDraftPanel.tsx` with sequential turn-based picking
-14. Build `StrategyCardInfo.tsx` and `StrategyDraftPanel.tsx`
-
-**Phase D -- Polish**
-15. Spectator mode (read-only view for non-participants)
-16. Handle edge cases (player leaves, host disconnects, partial drafts)
-17. Mobile-responsive layout for the lobby
+1. Database migration: add `setup_mode` column to `games`
+2. Create `HostSetupPanel.tsx` component with the player assignment form
+3. Update `CreateGame.tsx` with the mode toggle and conditional rendering
+4. Update `GameLobby.tsx` to include `setup_mode` in `GameData`
 
