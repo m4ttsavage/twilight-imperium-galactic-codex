@@ -258,8 +258,8 @@ function HomePlanetContent({ x, y, homeTile, hexSize }: { x: number; y: number; 
   ];
 
   const count = planets.length;
-  const baseY = y + hexSize * 0.42;
-  const spacing = count === 1 ? 0 : count === 2 ? 8 : 6.5;
+  const baseY = y + hexSize * 0.15;
+  const spacing = count === 1 ? 0 : count === 2 ? 9 : 7;
   const startY = baseY - (spacing * (count - 1)) / 2;
 
   return (
@@ -269,30 +269,31 @@ function HomePlanetContent({ x, y, homeTile, hexSize }: { x: number; y: number; 
         const color = techColor(p.tech);
         return (
           <g key={i}>
-            <circle cx={x - 10} cy={py} r={2.5} fill={color} opacity={0.8} />
-            <circle cx={x - 10} cy={py} r={1.5} fill="none" stroke="#ffffff18" strokeWidth={0.4} />
+            <circle cx={x - 11} cy={py} r={3} fill={color} opacity={0.8} />
+            <circle cx={x - 11} cy={py} r={1.8} fill="none" stroke="#ffffff18" strokeWidth={0.4} />
             <text
-              x={x - 5}
+              x={x - 6}
               y={py + 1.5}
               textAnchor="start"
               fill="#8899aa"
-              fontSize={3.5}
+              fontSize={3.8}
               fontFamily="Rajdhani"
               opacity={0.8}
             >
               {p.name.length > 9 ? p.name.slice(0, 9) + "…" : p.name}
             </text>
             <text
-              x={x + 13}
-              y={py + 1.8}
+              x={x + 14}
+              y={py + 2}
               textAnchor="end"
               fill="#ccd0dd"
-              fontSize={5}
+              fontSize={5.5}
               fontFamily="Rajdhani"
               fontWeight={600}
             >
               {p.resources}/{p.influence}
             </text>
+            {p.tech && <TechBadge x={x - 17} y={py} tech={p.tech} size={2.5} />}
           </g>
         );
       })}
