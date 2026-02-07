@@ -152,6 +152,7 @@ const SaveGameDialog = ({ map, sliceFactions, sliceNicknames }: Props) => {
                     placeholder="player@example.com"
                     value={results[i].email}
                     onChange={(e) => updateResult(i, "email", e.target.value)}
+                    maxLength={255}
                     className="h-8 text-xs bg-muted/30 border-border"
                     required
                   />
@@ -162,6 +163,7 @@ const SaveGameDialog = ({ map, sliceFactions, sliceNicknames }: Props) => {
                     placeholder="Optional"
                     value={results[i].name}
                     onChange={(e) => updateResult(i, "name", e.target.value)}
+                    maxLength={100}
                     className="h-8 text-xs bg-muted/30 border-border"
                   />
                 </div>
@@ -184,6 +186,7 @@ const SaveGameDialog = ({ map, sliceFactions, sliceNicknames }: Props) => {
                   <Input
                     type="number"
                     min="0"
+                    max="20"
                     placeholder="0"
                     value={results[i].victoryPoints}
                     onChange={(e) => updateResult(i, "victoryPoints", e.target.value)}
@@ -200,6 +203,7 @@ const SaveGameDialog = ({ map, sliceFactions, sliceNicknames }: Props) => {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Any notes about this game..."
+              maxLength={2000}
               className="text-xs bg-muted/30 border-border"
             />
           </div>
