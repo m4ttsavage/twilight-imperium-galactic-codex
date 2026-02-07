@@ -1,6 +1,7 @@
 import { format } from "date-fns";
-import { Users, Trophy, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { Users, Trophy, ChevronDown, ChevronUp, ExternalLink, Gamepad2 } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import GameDetailView from "@/components/GameDetailView";
 
 interface GamePlayer {
@@ -19,6 +20,7 @@ interface Game {
   notes: string | null;
   played_at: string;
   created_at: string;
+  name: string | null;
   game_players: GamePlayer[];
 }
 
@@ -51,7 +53,7 @@ const GameHistoryCard = ({ game, onViewMap }: Props) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-xs font-display uppercase tracking-wider text-foreground">
-              {game.player_count}p Game
+              {game.name || `${game.player_count}p Game`}
             </span>
             <span className="text-[10px] font-body text-muted-foreground">
               {format(new Date(game.played_at), "MMM d, yyyy")}
@@ -116,9 +118,16 @@ const GameHistoryCard = ({ game, onViewMap }: Props) => {
           )}
 
           <div className="flex items-center gap-2">
+            <Link
+              to={`/game/${game.id}`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider"
+            >
+              <Gamepad2 className="w-3 h-3" />
+              View in Lobby
+            </Link>
             <button
               onClick={() => onViewMap(game.map_string)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider"
             >
               <ExternalLink className="w-3 h-3" />
               Open in Generator

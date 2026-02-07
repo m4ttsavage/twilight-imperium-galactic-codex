@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { RefreshCw, ExternalLink, Copy, Share2, Check, Gamepad2, Users, UserCog, LogIn } from "lucide-react";
 import { generateMap, parseMapString, exportMapString, type GeneratedMap } from "@/lib/map-data";
+import { generateGameName } from "@/lib/game-names";
 import { getTilesForBanks, type TileBank } from "@/lib/tile-database";
 import { improveBalance } from "@/lib/map-balance";
 import ImportMapDialog from "@/components/map/ImportMapDialog";
@@ -152,6 +153,7 @@ const CreateGame = () => {
             player_count: map.playerCount,
             status: "ready",
             setup_mode: "host_chooses",
+            name: generateGameName(),
           } as any)
           .select("id")
           .single();
@@ -208,13 +210,14 @@ const CreateGame = () => {
       const mapString = exportMapString(map);
       const { data: game, error } = await supabase
         .from("games")
-        .insert({
-          user_id: user.id,
-          map_string: mapString,
-          player_count: map.playerCount,
-          status: "faction_draft",
-          setup_mode: "players_choose",
-        } as any)
+          .insert({
+            user_id: user.id,
+            map_string: mapString,
+            player_count: map.playerCount,
+            status: "faction_draft",
+            setup_mode: "players_choose",
+            name: generateGameName(),
+          } as any)
         .select("id")
         .single();
 

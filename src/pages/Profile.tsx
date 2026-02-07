@@ -25,6 +25,7 @@ interface Game {
   notes: string | null;
   played_at: string;
   created_at: string;
+  name: string | null;
   game_players: GamePlayer[];
 }
 
