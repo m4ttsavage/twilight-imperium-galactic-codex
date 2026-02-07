@@ -285,22 +285,16 @@ const MapGenerator = () => {
                 onNickname={handleNickname}
               />
 
-              {/* Map + Legend */}
-              <div className="flex flex-col lg:flex-row gap-3">
-                <div className="flex-1 min-w-0">
-                  <ZoomableMapContainer>
-                    <HexMapBoard
-                      map={map}
-                      sliceFactions={sliceFactions}
-                      sliceNicknames={sliceNicknames}
-                      onHomeClick={handleHomeClick}
-                    />
-                  </ZoomableMapContainer>
-                </div>
-                <div className="lg:w-52 flex-shrink-0">
-                  <MapLegend compact={!isMobile} />
-                </div>
-              </div>
+              {/* Legend + Map */}
+              <MapLegend />
+              <ZoomableMapContainer>
+                <HexMapBoard
+                  map={map}
+                  sliceFactions={sliceFactions}
+                  sliceNicknames={sliceNicknames}
+                  onHomeClick={handleHomeClick}
+                />
+              </ZoomableMapContainer>
             </motion.div>
           )}
 

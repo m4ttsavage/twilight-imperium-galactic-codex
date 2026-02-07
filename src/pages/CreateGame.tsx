@@ -400,20 +400,14 @@ const CreateGame = () => {
                 </div>
               )}
 
-              <div className="flex flex-col lg:flex-row gap-3">
-                <div className="flex-1 min-w-0">
-                  <ZoomableMapContainer>
-                    <HexMapBoard
-                      map={map}
-                      sliceFactions={Array(map.playerCount).fill(null)}
-                      sliceNicknames={Array(map.playerCount).fill("")}
-                    />
-                  </ZoomableMapContainer>
-                </div>
-                <div className="lg:w-52 flex-shrink-0">
-                  <MapLegend compact={!isMobile} />
-                </div>
-              </div>
+              <MapLegend />
+              <ZoomableMapContainer>
+                <HexMapBoard
+                  map={map}
+                  sliceFactions={Array(map.playerCount).fill(null)}
+                  sliceNicknames={Array(map.playerCount).fill("")}
+                />
+              </ZoomableMapContainer>
             </motion.div>
           )}
 
