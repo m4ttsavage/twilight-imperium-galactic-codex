@@ -7,6 +7,7 @@ interface HexTileGraphicsProps {
   hexSize: number;
   isCenter: boolean;
   isHome: boolean;
+  homeTile?: SystemTile;
 }
 
 // ── Tech specialty → color ──────────────────────────────────────
@@ -249,10 +250,66 @@ function TechBadge({ x, y, tech, size = 3.5 }: { x: number; y: number; tech: Tec
   );
 }
 
+// ── Compact homeworld planet display ────────────────────────────
+
+function HomePlanetContent({ x, y, homeTile, hexSize }: { x: number; y: number; homeTile: SystemTile; hexSize: number }) {
+  const planets: PlanetInfo[] = homeTile.planets || [
+    { name: homeTile.name, resources: homeTile.resources, influence: homeTile.influence, tech: homeTile.tech },
+  ];
+
+  const count = planets.length;
+  const baseY = y + hexSize * 0.42;
+  const spacing = count === 1 ? 0 : count === 2 ? 8 : 6.5;
+  const startY = baseY - (spacing * (count - 1)) / 2;
+
+  return (
+    <g>
+      {planets.map((p, i) => {
+        const py = startY + i * spacing;
+        const color = techColor(p.tech);
+        return (
+          <g key={i}>
+            <circle cx={x - 10} cy={py} r={2.5} fill={color} opacity={0.8} />
+            <circle cx={x - 10} cy={py} r={1.5} fill="none" stroke="#ffffff18" strokeWidth={0.4} />
+            <text
+              x={x - 5}
+              y={py + 1.5}
+              textAnchor="start"
+              fill="#8899aa"
+              fontSize={3.5}
+              fontFamily="Rajdhani"
+              opacity={0.8}
+            >
+              {p.name.length > 9 ? p.name.slice(0, 9) + "…" : p.name}
+            </text>
+            <text
+              x={x + 13}
+              y={py + 1.8}
+              textAnchor="end"
+              fill="#ccd0dd"
+              fontSize={5}
+              fontFamily="Rajdhani"
+              fontWeight={600}
+            >
+              {p.resources}/{p.influence}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
 // ── Main component ──────────────────────────────────────────────
 
-const HexTileGraphics = ({ tile, x, y, hexSize, isCenter, isHome }: HexTileGraphicsProps) => {
-  if (isCenter || isHome) return null;
+const HexTileGraphics = ({ tile, x, y, hexSize, isCenter, isHome, homeTile }: HexTileGraphicsProps) => {
+  if (isCenter) return null;
+
+  // Home hex: render compact homeworld planets when faction is assigned
+  if (isHome) {
+    if (!homeTile) return null;
+    return <HomePlanetContent x={x} y={y} homeTile={homeTile} hexSize={hexSize} />;
+  }
 
   const tileIdLabel = tile.id > 0 ? (
     <text x={x} y={y + hexSize * 0.78} textAnchor="middle" fill="#556677" fontSize={5} fontFamily="Rajdhani" opacity={0.5}>

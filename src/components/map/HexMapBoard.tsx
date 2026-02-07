@@ -1,5 +1,6 @@
 import { GeneratedMap, hexToPixel, hexPoints, sliceLabel, SLICE_COLORS } from "@/lib/map-data";
 import { TI4_FACTIONS } from "@/lib/factions";
+import { FACTION_HOMEWORLDS } from "@/lib/faction-homeworlds";
 import HexTileGraphics from "./HexTileGraphics";
 
 interface HexMapBoardProps {
@@ -145,10 +146,10 @@ const HexMapBoard = ({ map, sliceFactions, sliceNicknames = [], onHomeClick }: H
                 {nickname && (
                   <text
                     x={x}
-                    y={y - 20}
+                    y={y - 18}
                     textAnchor="middle"
                     fill={stroke}
-                    fontSize={5.5}
+                    fontSize={5}
                     fontFamily="Rajdhani"
                     fontWeight={600}
                     opacity={0.85}
@@ -158,71 +159,17 @@ const HexMapBoard = ({ map, sliceFactions, sliceNicknames = [], onHomeClick }: H
                 )}
                 <image
                   href={factionData.icon}
-                  x={x - 12}
-                  y={nickname ? y - 12 : y - 14}
-                  width={24}
-                  height={24}
+                  x={x - 9}
+                  y={nickname ? y - 13 : y - 14}
+                  width={18}
+                  height={18}
                   opacity={0.9}
                 />
-                <text x={x} y={y + (nickname ? 20 : 18)} textAnchor="middle" fill={stroke} fontSize={6} fontFamily="Orbitron" fontWeight={500}>
+                <text x={x} y={y + (nickname ? 11 : 10)} textAnchor="middle" fill={stroke} fontSize={5.5} fontFamily="Orbitron" fontWeight={500}>
                   {factionData.shortName}
                 </text>
               </g>
             )}
-
-            {/* R/I stats badge on home hexes */}
-            {hex.isHome && (() => {
-              const stats = map.sliceStats[hex.sliceIndex];
-              if (!stats) return null;
-              const badgeY = y + HEX_SIZE * 0.78;
-              return (
-                <g>
-                  <rect
-                    x={x - 16}
-                    y={badgeY - 5.5}
-                    width={32}
-                    height={11}
-                    rx={3}
-                    fill={color + "20"}
-                    stroke={color + "40"}
-                    strokeWidth={0.5}
-                  />
-                  <text
-                    x={x - 3}
-                    y={badgeY + 2}
-                    textAnchor="end"
-                    fontSize={6}
-                    fontFamily="Rajdhani"
-                    fontWeight={700}
-                    fill="#4ade80"
-                  >
-                    {stats.resources}
-                  </text>
-                  <text
-                    x={x}
-                    y={badgeY + 2}
-                    textAnchor="middle"
-                    fontSize={5}
-                    fontFamily="Rajdhani"
-                    fill={color}
-                    opacity={0.5}
-                  >
-                    /
-                  </text>
-                  <text
-                    x={x + 3}
-                    y={badgeY + 2}
-                    textAnchor="start"
-                    fontSize={6}
-                    fontFamily="Rajdhani"
-                    fontWeight={700}
-                    fill="#60a5fa"
-                  >
-                    {stats.influence}
-                  </text>
-                </g>
-              );
-            })()}
 
             {/* Tile graphics (planets, anomalies, wormholes, empty) */}
             <HexTileGraphics
@@ -232,6 +179,11 @@ const HexMapBoard = ({ map, sliceFactions, sliceNicknames = [], onHomeClick }: H
               hexSize={HEX_SIZE}
               isCenter={hex.isCenter}
               isHome={hex.isHome}
+              homeTile={
+                hex.isHome && sliceFactions[hex.sliceIndex]
+                  ? FACTION_HOMEWORLDS[sliceFactions[hex.sliceIndex]!]
+                  : undefined
+              }
             />
           </g>
         );

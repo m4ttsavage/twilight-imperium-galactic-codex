@@ -14,6 +14,7 @@ import StrategyDraftPanel from "@/components/game/StrategyDraftPanel";
 import FateMessage from "@/components/game/FateMessage";
 import GameResultsPanel from "@/components/game/GameResultsPanel";
 import GameCompleteSummary from "@/components/game/GameCompleteSummary";
+import MapLegend from "@/components/map/MapLegend";
 import TopNav from "@/components/TopNav";
 import { toast } from "sonner";
 import {
@@ -450,12 +451,15 @@ const GameLobby = () => {
             {/* Left: Map */}
             <div className="flex-1 min-w-0">
               {parsedMap && (
-                <div className="rounded-xl border border-border bg-card/40 p-2 overflow-hidden">
-                  <HexMapBoard
-                    map={parsedMap}
-                    sliceFactions={sliceFactions}
-                    sliceNicknames={sliceNicknames}
-                  />
+                <div className="space-y-2">
+                  <div className="rounded-xl border border-border bg-card/40 p-2 overflow-hidden">
+                    <HexMapBoard
+                      map={parsedMap}
+                      sliceFactions={sliceFactions}
+                      sliceNicknames={sliceNicknames}
+                    />
+                  </div>
+                  <MapLegend />
                 </div>
               )}
             </div>
