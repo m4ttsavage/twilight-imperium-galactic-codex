@@ -53,7 +53,7 @@ const FactionSelector = ({
         <div className="flex items-center gap-2 min-w-0">
           {selectedFactionData ? <img src={selectedFactionData.icon} alt={selectedFactionData.shortName} className="w-5 h-5 object-contain flex-shrink-0" /> : <Shield className="w-4 h-4 text-gold flex-shrink-0" />}
           <span className="font-body text-foreground truncate font-bold text-base">
-           {selectedFaction ? formatLabel(selectedFaction) : <>Set up your game by <span className="text-gold underline decoration-gold/50 hover:decoration-gold cursor-pointer transition-colors">choosing factions</span>. Then visit the <Link to="/map" className="text-gold underline decoration-gold/50 hover:decoration-gold transition-colors" onClick={e => e.stopPropagation()}>Map</Link> to select starting positions.</>}
+           {selectedFaction ? formatLabel(selectedFaction) : <>Set up your game by <span className="text-gold underline decoration-gold/50 hover:decoration-gold cursor-pointer transition-colors">choosing factions</span>. Then visit the <Link to="/game/new" className="text-gold underline decoration-gold/50 hover:decoration-gold transition-colors" onClick={e => e.stopPropagation()}>Create Game</Link> to select starting positions.</>}
           </span>
           {opponents.length > 0 && <span className="text-xs px-2 py-0.5 rounded-full bg-teal-dim/50 text-teal font-body flex-shrink-0">
               vs {opponents.length}
