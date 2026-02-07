@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { RefreshCw, ExternalLink, Copy, Share2, Check, Gamepad2, Users, UserCog, LogIn } from "lucide-react";
-import { generateMap, getSupportedPlayerCounts, parseMapString, exportMapString, type GeneratedMap } from "@/lib/map-data";
+import { generateMap, parseMapString, exportMapString, type GeneratedMap } from "@/lib/map-data";
 import { getTilesForBanks, type TileBank } from "@/lib/tile-database";
 import { improveBalance } from "@/lib/map-balance";
 import ImportMapDialog from "@/components/map/ImportMapDialog";
@@ -10,6 +10,7 @@ import HexMapBoard from "@/components/map/HexMapBoard";
 import ZoomableMapContainer from "@/components/map/ZoomableMapContainer";
 import SystemBankSelector from "@/components/map/SystemBankSelector";
 import BalanceDropdown from "@/components/map/BalanceDropdown";
+import PlayerCountSelector from "@/components/map/PlayerCountSelector";
 import MapLegend from "@/components/map/MapLegend";
 import FloatingChat from "@/components/FloatingChat";
 import TopNav from "@/components/TopNav";
@@ -301,79 +302,61 @@ const CreateGame = () => {
             </div>
           )}
 
-          {/* Controls */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-display uppercase tracking-widest text-muted-foreground">
-              Players
-            </span>
-            {getSupportedPlayerCounts().map((n) => (
+            <PlayerCountSelector value={playerCount} onChange={handlePlayerCountChange} />
+            <SystemBankSelector enabled={enabledBanks} onChange={setEnabledBanks} />
+            <BalanceDropdown onBalance={handleBalance} disabled={!map} />
+            <ImportMapDialog onImport={(imported) => {
+              setPlayerCount(imported.playerCount);
+              setMap(imported);
+            }} />
+            <button
+              onClick={handleExport}
+              disabled={!map}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider disabled:opacity-40"
+            >
+              {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+              {copied ? "Copied" : "Export"}
+            </button>
+            <button
+              onClick={handleShare}
+              disabled={!map}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider disabled:opacity-40"
+            >
+              {shared ? <Check className="w-3 h-3 text-green-400" /> : <Share2 className="w-3 h-3" />}
+              {shared ? "Copied" : "Share"}
+            </button>
+            <button
+              onClick={handleGenerate}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider"
+            >
+              <RefreshCw className="w-3 h-3" />
+              Regenerate
+            </button>
+            {map && user && (
               <button
-                key={n}
-                onClick={() => handlePlayerCountChange(n)}
-                className={`text-[11px] px-2.5 py-1 rounded-lg font-body transition-colors ${
-                  playerCount === n
-                    ? "bg-gold/20 text-gold border border-gold/30"
-                    : "bg-muted/30 text-muted-foreground border border-transparent hover:text-foreground"
-                }`}
+                onClick={handleCreateGame}
+                disabled={creating}
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gold/20 border border-gold/30 text-gold hover:bg-gold/30 transition-colors text-[10px] font-display uppercase tracking-wider disabled:opacity-50"
               >
-                {n}p
+                <Gamepad2 className="w-3.5 h-3.5" />
+                {creating ? "Creating…" : "Create Game"}
               </button>
-            ))}
-            <div className="ml-auto flex items-center gap-2 flex-wrap">
-              <SystemBankSelector enabled={enabledBanks} onChange={setEnabledBanks} />
-              <BalanceDropdown onBalance={handleBalance} disabled={!map} />
-              <ImportMapDialog onImport={(imported) => {
-                setPlayerCount(imported.playerCount);
-                setMap(imported);
-              }} />
+            )}
+            {setupMode === "host_chooses" && !hostValid && map && user && (
+              <span className="text-[9px] font-body text-muted-foreground italic">
+                Fill in all assignments to create
+              </span>
+            )}
+            {!user && !authLoading && (
               <button
-                onClick={handleExport}
-                disabled={!map}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider disabled:opacity-40"
+                onClick={() => navigate("/auth")}
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gold/20 border border-gold/30 text-gold hover:bg-gold/30 transition-colors text-[10px] font-display uppercase tracking-wider animate-pulse hover:animate-none"
               >
-                {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
-                {copied ? "Copied" : "Export"}
+                <LogIn className="w-3.5 h-3.5" />
+                Sign in to set up games & track results
               </button>
-              <button
-                onClick={handleShare}
-                disabled={!map}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider disabled:opacity-40"
-              >
-                {shared ? <Check className="w-3 h-3 text-green-400" /> : <Share2 className="w-3 h-3" />}
-                {shared ? "Copied" : "Share"}
-              </button>
-              <button
-                onClick={handleGenerate}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider"
-              >
-                <RefreshCw className="w-3 h-3" />
-                Regenerate
-              </button>
-              {map && user && (
-                <button
-                  onClick={handleCreateGame}
-                  disabled={creating}
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gold/20 border border-gold/30 text-gold hover:bg-gold/30 transition-colors text-[10px] font-display uppercase tracking-wider disabled:opacity-50"
-                >
-                  <Gamepad2 className="w-3.5 h-3.5" />
-                  {creating ? "Creating…" : "Create Game"}
-                </button>
-              )}
-              {setupMode === "host_chooses" && !hostValid && map && user && (
-                <span className="text-[9px] font-body text-muted-foreground italic">
-                  Fill in all assignments to create
-                </span>
-              )}
-              {!user && !authLoading && (
-                <button
-                  onClick={() => navigate("/auth")}
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gold/20 border border-gold/30 text-gold hover:bg-gold/30 transition-colors text-[10px] font-display uppercase tracking-wider animate-pulse hover:animate-none"
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  Sign in to set up games & track results
-                </button>
-              )}
-            </div>
+            )}
           </div>
         </motion.header>
 

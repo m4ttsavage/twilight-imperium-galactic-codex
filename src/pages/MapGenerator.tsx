@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Map, RefreshCw, ExternalLink, Copy, Share2, Check } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
-import { generateMap, getSupportedPlayerCounts, parseMapString, exportMapString, type GeneratedMap } from "@/lib/map-data";
+import { generateMap, parseMapString, exportMapString, type GeneratedMap } from "@/lib/map-data";
 import { getTilesForBanks, type TileBank } from "@/lib/tile-database";
 import { improveBalance } from "@/lib/map-balance";
 import ImportMapDialog from "@/components/map/ImportMapDialog";
@@ -13,6 +13,7 @@ import ZoomableMapContainer from "@/components/map/ZoomableMapContainer";
 import SlicePanel from "@/components/map/SlicePanel";
 import SystemBankSelector from "@/components/map/SystemBankSelector";
 import BalanceDropdown from "@/components/map/BalanceDropdown";
+import PlayerCountSelector from "@/components/map/PlayerCountSelector";
 import FactionPickerDialog from "@/components/map/FactionPickerDialog";
 import MapLegend from "@/components/map/MapLegend";
 import FloatingChat from "@/components/FloatingChat";
@@ -207,58 +208,41 @@ const MapGenerator = () => {
 
           {/* Controls */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-display uppercase tracking-widest text-muted-foreground">
-              Players
-            </span>
-            {getSupportedPlayerCounts().map((n) => (
-              <button
-                key={n}
-                onClick={() => handlePlayerCountChange(n)}
-                className={`text-[11px] px-2.5 py-1 rounded-lg font-body transition-colors ${
-                  playerCount === n
-                    ? "bg-gold/20 text-gold border border-gold/30"
-                    : "bg-muted/30 text-muted-foreground border border-transparent hover:text-foreground"
-                }`}
-              >
-                {n}p
-              </button>
-            ))}
-            <div className="ml-auto flex items-center gap-2 flex-wrap">
-              <SystemBankSelector enabled={enabledBanks} onChange={setEnabledBanks} />
-              <BalanceDropdown onBalance={handleBalance} disabled={!map} />
-              <ImportMapDialog onImport={(imported) => {
-                setPlayerCount(imported.playerCount);
-                setMap(imported);
-                setSliceFactions(Array(imported.playerCount).fill(null));
-                setSliceNicknames(Array(imported.playerCount).fill(""));
-              }} />
-              <button
-                onClick={handleExport}
-                disabled={!map}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider disabled:opacity-40"
-              >
-                {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
-                {copied ? "Copied" : "Export"}
-              </button>
-              <button
-                onClick={handleShare}
-                disabled={!map}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider disabled:opacity-40"
-              >
-                {shared ? <Check className="w-3 h-3 text-green-400" /> : <Share2 className="w-3 h-3" />}
-                {shared ? "Copied" : "Share"}
-              </button>
-              {map && user && (
-                <SaveGameDialog map={map} sliceFactions={sliceFactions} sliceNicknames={sliceNicknames} />
-              )}
-              <button
-                onClick={handleGenerate}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider"
-              >
-                <RefreshCw className="w-3 h-3" />
-                Regenerate
-              </button>
-            </div>
+            <PlayerCountSelector value={playerCount} onChange={handlePlayerCountChange} />
+            <SystemBankSelector enabled={enabledBanks} onChange={setEnabledBanks} />
+            <BalanceDropdown onBalance={handleBalance} disabled={!map} />
+            <ImportMapDialog onImport={(imported) => {
+              setPlayerCount(imported.playerCount);
+              setMap(imported);
+              setSliceFactions(Array(imported.playerCount).fill(null));
+              setSliceNicknames(Array(imported.playerCount).fill(""));
+            }} />
+            <button
+              onClick={handleExport}
+              disabled={!map}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider disabled:opacity-40"
+            >
+              {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+              {copied ? "Copied" : "Export"}
+            </button>
+            <button
+              onClick={handleShare}
+              disabled={!map}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider disabled:opacity-40"
+            >
+              {shared ? <Check className="w-3 h-3 text-green-400" /> : <Share2 className="w-3 h-3" />}
+              {shared ? "Copied" : "Share"}
+            </button>
+            {map && user && (
+              <SaveGameDialog map={map} sliceFactions={sliceFactions} sliceNicknames={sliceNicknames} />
+            )}
+            <button
+              onClick={handleGenerate}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider"
+            >
+              <RefreshCw className="w-3 h-3" />
+              Regenerate
+            </button>
           </div>
         </motion.header>
 
