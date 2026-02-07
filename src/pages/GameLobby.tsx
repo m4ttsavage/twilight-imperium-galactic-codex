@@ -169,7 +169,7 @@ const GameLobby = () => {
       // Resolve draft
       const prefs = updatedPlayers.map((p: any) => ({
         playerId: p.id,
-        playerName: p.nickname || p.email || "Player",
+        playerName: p.nickname || "Player",
         pref1: p.faction_pref_1 || "",
         pref2: p.faction_pref_2 || "",
         pref3: p.faction_pref_3 || "",
@@ -273,7 +273,7 @@ const GameLobby = () => {
   const takenCards: Record<number, string> = {};
   players.forEach((p) => {
     if (p.strategy_card !== null) {
-      takenCards[p.strategy_card] = p.nickname || p.email || "Player";
+      takenCards[p.strategy_card] = p.nickname || "Player";
     }
   });
 
@@ -293,7 +293,7 @@ const GameLobby = () => {
     const names: string[] = Array(parsedMap.playerCount).fill("");
     players.forEach((p) => {
       if (p.slice_index >= 0 && p.slice_index < names.length) {
-        names[p.slice_index] = p.nickname || p.email || "";
+        names[p.slice_index] = p.nickname || "";
       }
     });
     return names;
@@ -384,6 +384,7 @@ const GameLobby = () => {
                 gameStatus={game.status}
                 currentTurnPlayerId={currentTurnPlayerId}
                 playerCount={game.player_count}
+                isHost={!!isHost}
               />
 
               {/* Join button for non-participants */}
