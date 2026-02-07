@@ -212,33 +212,11 @@ export type Database = {
           id?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "user_email_lookup"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
-      user_email_lookup: {
-        Row: {
-          email: string | null
-          id: string | null
-        }
-        Insert: {
-          email?: string | null
-          id?: string | null
-        }
-        Update: {
-          email?: string | null
-          id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       check_chat_rate_limit: {
@@ -249,6 +227,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_user_email_by_id: { Args: { _user_id: string }; Returns: string }
+      get_user_id_by_email: { Args: { _email: string }; Returns: string }
       is_game_owner: { Args: { _game_id: string }; Returns: boolean }
       is_game_participant: { Args: { _game_id: string }; Returns: boolean }
     }
