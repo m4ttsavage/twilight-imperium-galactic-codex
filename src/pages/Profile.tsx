@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LogOut, User, History } from "lucide-react";
+import { LogOut, User, History, Save, Pencil } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import GameHistoryCard from "@/components/GameHistoryCard";
 import TopNav from "@/components/TopNav";
@@ -32,8 +33,17 @@ interface Game {
 const Profile = () => {
   const navigate = useNavigate();
   const { user, loading, signOut } = useAuth();
+  const { displayName, updateDisplayName } = useProfile();
   const [games, setGames] = useState<Game[]>([]);
   const [loadingGames, setLoadingGames] = useState(true);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [savingName, setSavingName] = useState(false);
+
+  // Sync input when displayName loads
+  useEffect(() => {
+    if (displayName !== null) setNameInput(displayName);
+  }, [displayName]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -61,6 +71,18 @@ const Profile = () => {
 
   const handleViewMap = (mapString: string) => {
     navigate(`/game/new?map=${encodeURIComponent(mapString)}`);
+  };
+
+  const handleSaveName = async () => {
+    setSavingName(true);
+    const ok = await updateDisplayName(nameInput);
+    setSavingName(false);
+    if (ok) {
+      toast.success("Display name saved");
+      setEditingName(false);
+    } else {
+      toast.error("Failed to save display name");
+    }
   };
 
   const handleSignOut = async () => {
@@ -91,7 +113,7 @@ const Profile = () => {
             </div>
             <div className="flex-1">
               <h1 className="font-display text-sm tracking-widest text-foreground uppercase">
-                Profile
+                {displayName || "Profile"}
               </h1>
               <p className="text-[10px] font-body text-muted-foreground tracking-wide">
                 {user.email}
@@ -104,6 +126,54 @@ const Profile = () => {
               <LogOut className="w-3.5 h-3.5" />
               Sign Out
             </button>
+          </div>
+
+          {/* Display Name */}
+          <div className="mt-3 flex items-center gap-2">
+            {editingName ? (
+              <>
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  placeholder="Display name…"
+                  maxLength={40}
+                  className="flex-1 h-8 px-3 rounded-lg bg-muted/30 border border-border text-xs font-body text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-gold/40"
+                  autoFocus
+                  onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
+                />
+                <button
+                  onClick={handleSaveName}
+                  disabled={savingName}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gold/10 border border-gold/30 text-gold hover:bg-gold/20 transition-colors text-[10px] font-display uppercase tracking-wider disabled:opacity-40"
+                >
+                  <Save className="w-3 h-3" />
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingName(false);
+                    setNameInput(displayName || "");
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground transition-colors text-[10px] font-display uppercase tracking-wider"
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="text-xs font-body text-foreground/80 flex-1 truncate">
+                  {displayName || <span className="text-muted-foreground italic">No display name set</span>}
+                </span>
+                <button
+                  onClick={() => setEditingName(true)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground transition-colors text-[10px] font-display uppercase tracking-wider"
+                >
+                  <Pencil className="w-3 h-3" />
+                  Edit Name
+                </button>
+              </>
+            )}
           </div>
         </motion.header>
 

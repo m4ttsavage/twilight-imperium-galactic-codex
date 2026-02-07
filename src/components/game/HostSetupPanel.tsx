@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { Users } from "lucide-react";
 import { TI4_FACTIONS } from "@/lib/factions";
 import { STRATEGY_CARDS } from "@/lib/strategy-cards";
+import FactionSearchSelect from "@/components/FactionSearchSelect";
 
 export interface PlayerAssignment {
   name: string;
@@ -191,44 +192,13 @@ const PlayerCard = ({
       />
 
       {/* Faction select */}
-      <select
+      <FactionSearchSelect
         value={row.factionName}
-        onChange={(e) => onUpdate(index, "factionName", e.target.value)}
-        className="w-full h-7 px-2 rounded bg-card border border-border text-[11px] font-body text-foreground focus:outline-none focus:border-gold/40 appearance-none cursor-pointer
-          [&>option]:bg-card [&>option]:text-foreground [&>optgroup]:font-display [&>optgroup]:text-[10px] [&>optgroup]:uppercase [&>optgroup]:tracking-wider [&>optgroup]:text-gold"
-      >
-        <option value="" className="text-muted-foreground">Select Faction…</option>
-        <optgroup label="Base Game">
-          {TI4_FACTIONS.filter((f) => f.expansion === "base").map((f) => {
-            const taken = usedFactions.includes(f.name) && row.factionName !== f.name;
-            return (
-              <option key={f.name} value={f.name} disabled={taken}>
-                {f.name}{taken ? " ✗" : ""}
-              </option>
-            );
-          })}
-        </optgroup>
-        <optgroup label="Prophecy of Kings">
-          {TI4_FACTIONS.filter((f) => f.expansion === "pok").map((f) => {
-            const taken = usedFactions.includes(f.name) && row.factionName !== f.name;
-            return (
-              <option key={f.name} value={f.name} disabled={taken}>
-                {f.name}{taken ? " ✗" : ""}
-              </option>
-            );
-          })}
-        </optgroup>
-        <optgroup label="Thunder's Edge">
-          {TI4_FACTIONS.filter((f) => f.expansion === "te").map((f) => {
-            const taken = usedFactions.includes(f.name) && row.factionName !== f.name;
-            return (
-              <option key={f.name} value={f.name} disabled={taken}>
-                {f.name}{taken ? " ✗" : ""}
-              </option>
-            );
-          })}
-        </optgroup>
-      </select>
+        onChange={(val) => onUpdate(index, "factionName", val)}
+        exclude={usedFactions.filter((f) => f !== row.factionName)}
+        placeholder="Select Faction…"
+        compact
+      />
 
       {/* Slice + Strategy in a row */}
       <div className="flex gap-1.5">

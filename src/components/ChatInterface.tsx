@@ -6,6 +6,7 @@ import QuickPrompts from "./QuickPrompts";
 import FactionSelector from "./FactionSelector";
 import { streamChat } from "@/lib/chat-stream";
 import { toast } from "sonner";
+import { useProfile } from "@/hooks/useProfile";
 type Msg = {
   role: "user" | "assistant";
   content: string;
@@ -19,6 +20,7 @@ const ChatInterface = () => {
   const [nicknames, setNicknames] = useState<Record<string, string>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const { displayName } = useProfile();
 
   // Persist game setup for MapGenerator
   useEffect(() => {
@@ -91,7 +93,7 @@ const ChatInterface = () => {
   return <div className="flex flex-col h-full">
       {/* Header bar */}
       <div className="flex-shrink-0 p-4 space-y-3">
-        <FactionSelector selectedFaction={selectedFaction} opponents={opponents} nicknames={nicknames} onFactionChange={setSelectedFaction} onOpponentsChange={setOpponents} onNicknamesChange={setNicknames} />
+        <FactionSelector selectedFaction={selectedFaction} opponents={opponents} nicknames={nicknames} onFactionChange={setSelectedFaction} onOpponentsChange={setOpponents} onNicknamesChange={setNicknames} defaultNickname={displayName || undefined} />
       </div>
 
       {/* Messages area */}
