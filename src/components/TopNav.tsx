@@ -3,8 +3,8 @@ import { Home, Map, BookOpen, GitCompareArrows, User, LogIn } from "lucide-react
 import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
-  { to: "/", label: "Home", icon: Home },
-  { to: "/map", label: "Map", icon: Map },
+  { to: "/", label: "Codex", icon: Home },
+  { to: "/game/new", label: "Create Game", icon: Map },
   { to: "/factions", label: "Factions", icon: BookOpen },
   { to: "/factions/compare", label: "Compare", icon: GitCompareArrows },
 ];

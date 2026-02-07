@@ -16,36 +16,57 @@ export type Database = {
     Tables: {
       game_players: {
         Row: {
+          draft_position: number | null
           email: string | null
+          faction_locked: boolean | null
           faction_name: string | null
+          faction_pref_1: string | null
+          faction_pref_2: string | null
+          faction_pref_3: string | null
           game_id: string
           id: string
+          joined_at: string | null
           nickname: string | null
           placement: number | null
           player_user_id: string | null
           slice_index: number
+          strategy_card: number | null
           victory_points: number | null
         }
         Insert: {
+          draft_position?: number | null
           email?: string | null
+          faction_locked?: boolean | null
           faction_name?: string | null
+          faction_pref_1?: string | null
+          faction_pref_2?: string | null
+          faction_pref_3?: string | null
           game_id: string
           id?: string
+          joined_at?: string | null
           nickname?: string | null
           placement?: number | null
           player_user_id?: string | null
           slice_index: number
+          strategy_card?: number | null
           victory_points?: number | null
         }
         Update: {
+          draft_position?: number | null
           email?: string | null
+          faction_locked?: boolean | null
           faction_name?: string | null
+          faction_pref_1?: string | null
+          faction_pref_2?: string | null
+          faction_pref_3?: string | null
           game_id?: string
           id?: string
+          joined_at?: string | null
           nickname?: string | null
           placement?: number | null
           player_user_id?: string | null
           slice_index?: number
+          strategy_card?: number | null
           victory_points?: number | null
         }
         Relationships: [
@@ -68,29 +89,35 @@ export type Database = {
       games: {
         Row: {
           created_at: string
+          draft_order: number[] | null
           id: string
           map_string: string
           notes: string | null
           played_at: string
           player_count: number
+          status: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          draft_order?: number[] | null
           id?: string
           map_string: string
           notes?: string | null
           played_at?: string
           player_count: number
+          status?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          draft_order?: number[] | null
           id?: string
           map_string?: string
           notes?: string | null
           played_at?: string
           player_count?: number
+          status?: string
           user_id?: string
         }
         Relationships: [
