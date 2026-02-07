@@ -52,7 +52,7 @@ const FactionSelector = ({
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-muted/40 border border-border hover:border-gold/30 transition-colors"
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-muted/40 border border-border hover:border-gold/30 transition-colors min-h-[52px]"
       >
         <div className="flex items-center gap-2 min-w-0">
           {selectedFactionData ? (
@@ -64,7 +64,7 @@ const FactionSelector = ({
           ) : (
             <Shield className="w-4 h-4 text-gold flex-shrink-0" />
           )}
-          <span className="font-body text-foreground truncate font-bold text-base">
+          <span className="font-body text-foreground font-bold text-sm leading-snug whitespace-normal">
             {selectedFaction ? (
               formatLabel(selectedFaction)
             ) : (
