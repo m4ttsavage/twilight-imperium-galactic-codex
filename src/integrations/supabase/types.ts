@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_rate_limits: {
+        Row: {
+          request_count: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          request_count?: number
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          request_count?: number
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       game_players: {
         Row: {
           draft_position: number | null
@@ -165,6 +183,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_chat_rate_limit: {
+        Args: {
+          _max_requests?: number
+          _user_id: string
+          _window_seconds?: number
+        }
+        Returns: boolean
+      }
       is_game_owner: { Args: { _game_id: string }; Returns: boolean }
       is_game_participant: { Args: { _game_id: string }; Returns: boolean }
     }

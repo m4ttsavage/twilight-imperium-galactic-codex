@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -112,6 +113,58 @@ serve(async (req) => {
   }
 
   try {
+    // --- Authentication ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required. Please sign in to use the AI chat." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(
+      authHeader.replace("Bearer ", "")
+    );
+    if (claimsError || !claimsData?.claims) {
+      console.error("Auth error:", claimsError?.message);
+      return new Response(
+        JSON.stringify({ error: "Invalid or expired session. Please sign in again." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = claimsData.claims.sub;
+    console.log(`Authenticated user: ${userId}`);
+
+    // --- Rate Limiting (30 requests per 60 seconds per user) ---
+    const serviceClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    const { data: allowed, error: rlError } = await serviceClient.rpc(
+      "check_chat_rate_limit",
+      { _user_id: userId, _max_requests: 30, _window_seconds: 60 }
+    );
+
+    if (rlError) {
+      console.error("Rate limit check error:", rlError.message);
+      // Fail open on rate limit errors to avoid blocking users due to DB issues
+    } else if (allowed === false) {
+      console.log(`Rate limited user: ${userId}`);
+      return new Response(
+        JSON.stringify({ error: "Rate limit reached. Please wait a moment before sending another message." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // --- Process chat request ---
     const { messages, faction, opponents } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -130,7 +183,7 @@ serve(async (req) => {
       }
     }
 
-    console.log(`TI4 Chat request - Faction: ${faction || "none"}, Opponents: ${opponents?.join(", ") || "none"}, Messages: ${messages.length}`);
+    console.log(`TI4 Chat request - User: ${userId}, Faction: ${faction || "none"}, Opponents: ${opponents?.join(", ") || "none"}, Messages: ${messages.length}`);
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
