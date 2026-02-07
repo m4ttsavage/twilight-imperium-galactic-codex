@@ -1,95 +1,109 @@
 
 
-## Larger, More Readable Map Tiles + Compact Legend Layout
+## Add "Complete Game" Flow to the Lobby
 
-### Overview
+### Current Game Status Values
 
-Two improvements to the Map Generator (and Create Game) pages:
+The game progresses through these statuses (stored in `games.status`):
 
-1. **Make the hex map larger and zoomable** so tile text is easier to read
-2. **Compress the map legend** into a tighter grid and position it beside the map when space allows
+| Status | Label | Meaning |
+|--------|-------|---------|
+| `setup` | Setting Up | Host is configuring the game, players joining |
+| `faction_draft` | Faction Draft | Players submit ranked faction preferences |
+| `slice_draft` | Slice Draft | Players pick map slices in draft order |
+| `strategy_draft` | Strategy Draft | Players pick strategy cards in snake order |
+| `ready` | Game Ready | All drafting complete, game can begin on the table |
 
----
-
-### 1. Larger, Zoomable Hex Map
-
-**Current state:** The SVG has `maxHeight: "70vh"` which caps how big it renders, and `HEX_SIZE = 38` controls the internal coordinate scale. Since it's an SVG with a computed viewBox, the text inside scales proportionally -- so the key constraint is the CSS `maxHeight` limiting how much screen space the map occupies.
-
-**Changes to `HexMapBoard.tsx`:**
-
-- Remove the `maxHeight: "70vh"` cap so the SVG can grow taller on large screens
-- Add a wrapper `div` with `overflow: auto` and mouse-wheel zoom support using a `transform: scale()` state variable
-- Implement pinch-to-zoom on touch devices and scroll-wheel zoom on desktop
-- Add zoom controls (+ / - buttons and a reset) in the corner of the map container
-- The zoom level will be stored in React state, applied as a CSS transform on an inner wrapper around the SVG
-- Default zoom will be 1x, with a range of roughly 0.5x to 2x
-- The SVG's `maxHeight` will be changed to `85vh` as a new default (giving ~20% more space), and zooming beyond that uses scroll overflow
-
-**Changes to `MapGenerator.tsx` and `CreateGame.tsx`:**
-
-- The map + legend will be wrapped in a new flex layout (details in section 2 below)
+There is **no "completed" status** yet. The `game_players` table already has `placement` (integer) and `victory_points` (integer) columns, but they are never populated from the lobby -- they're only displayed on the Profile page's history cards.
 
 ---
 
-### 2. Compact Legend + Side Placement
+### What This Plan Adds
 
-**Current state:** The `MapLegend` component renders as a vertical stack of sections (Tech, Anomalies, Wormholes, Slice Stats), each with a section header and a horizontal `flex-wrap` row of items. This wastes horizontal space -- on desktop the legend is ~200px tall but only uses maybe 40% of the available width.
+1. **A new `complete` status** for games that have finished being played
+2. **A "Complete Game" button** on the lobby page (host-only), visible when the game is in `ready` status
+3. **A results entry form** where the host can enter each player's final placement and victory points, plus optional game notes
+4. **A completed game summary view** shown to all players when the game status is `complete`
+5. **Updated status label** in the lobby header badge
 
-**Changes to `MapLegend.tsx`:**
+---
 
-- Restructure the legend into a dense grid layout:
-  - Combine the section headers inline with their items rather than stacking vertically
-  - Use a CSS grid with 2-4 columns so all legend categories sit in a compact block
-  - On desktop (when placed beside the map), the legend will be a narrow vertical column (~200-250px wide) with items stacked compactly
-  - On mobile (when placed below the map), it falls back to the current horizontal-wrap style
+### Detailed Changes
 
-**Changes to the map container layout in `MapGenerator.tsx` and `CreateGame.tsx`:**
+**File: `src/pages/GameLobby.tsx`**
 
-- Wrap the map card and legend in a responsive flex container:
-  - On large screens (lg+): `flex-row` with the map taking the majority of space and the legend as a narrow sidebar to the right
-  - On smaller screens: `flex-col` with the legend below the map (current behavior)
-- The legend sidebar will be approximately 220px wide with `flex-shrink-0`
+- Add `complete` to the `statusLabel` map: `complete: "Completed"`
+- Import the new `GameResultsPanel` component
+- Add a `handleCompleteGame` function that:
+  - Receives an array of `{ playerId, placement, victoryPoints }` and optional notes
+  - Updates each `game_player` row with `placement` and `victory_points`
+  - Updates the `games` row with `status: "complete"` and optionally `notes`
+- In the sidebar, when `game.status === "ready"` and `isHost`, show a "Complete Game" button that reveals the results entry form
+- When `game.status === "complete"`, show the completed game summary (replaces the "Game Ready" panel)
+
+**New file: `src/components/game/GameResultsPanel.tsx`**
+
+A host-only form for entering post-game results:
+- Lists each player with their faction icon and nickname
+- For each player: a placement dropdown (1st through Nth) and a VP number input
+- A text area for optional game notes
+- Validation: all placements must be filled, no duplicate placements (ties allowed optionally)
+- A "Finalize Results" button with a confirmation dialog (results are permanent)
+- Props: `players`, `onSubmit(results, notes)`
+
+**New file: `src/components/game/GameCompleteSummary.tsx`**
+
+A read-only summary panel shown to everyone when game status is `complete`:
+- Shows a standings table (sorted by placement) with faction, player name, and VP
+- Shows game notes if present
+- Similar visual style to the standings table in `GameHistoryCard`
+- Trophy icon for the winner
+
+**File: `src/components/game/PlayerList.tsx`**
+
+- Add `placement` and `victory_points` to the `GamePlayerInfo` interface
+- When game status is `complete`, show placement badge and VP next to each player
 
 ---
 
 ### Technical Details
 
-**File: `src/components/map/HexMapBoard.tsx`**
-- Add `useState` for zoom level (default 1, range 0.5-2.0)
-- Wrap the SVG in a container `div` with `overflow: auto`, `position: relative`
-- Apply `transform: scale(zoomLevel)` and `transform-origin: top center` on an inner wrapper
-- Add `onWheel` handler: Ctrl+scroll or pinch adjusts zoom by 0.1 increments
-- Add small floating zoom buttons (+ / - / reset) absolutely positioned in top-right corner of the map container
-- Change the SVG style from `maxHeight: "70vh"` to `maxHeight: "85vh"`
+**Database:** No schema changes needed. The `game_players` table already has `placement` (integer, nullable) and `victory_points` (integer, nullable) columns. The `games` table already has `notes` (text, nullable) and `status` (text) columns that accept any string value.
 
-**File: `src/components/map/MapLegend.tsx`**
-- Accept an optional `compact` prop (boolean, default false)
-- When `compact` is true (used in sidebar mode): render as a narrow vertical list with smaller spacing
-- When false (below map on mobile): keep current horizontal wrap layout
-- Remove the per-section vertical `space-y` gap, use tighter `gap-1` throughout
+**RLS:** No policy changes needed. The existing "Host can update their own game" policy covers updating status and notes. The "Hosts can update their game players" and "Players can update own draft picks" policies cover updating placement/VP.
 
-**File: `src/pages/MapGenerator.tsx`** (lines ~286-296)
-- Replace the current map + legend wrapper:
-  ```
-  <div className="flex flex-col lg:flex-row gap-3">
-    <div className="flex-1 min-w-0 rounded-xl border ...">
-      <HexMapBoard ... />
-    </div>
-    <div className="lg:w-56 flex-shrink-0">
-      <MapLegend compact={isDesktop} />
-    </div>
-  </div>
-  ```
-- Use a simple media query check or `useIsMobile()` hook (already exists) to determine `compact` mode
+**File: `src/pages/GameLobby.tsx`** -- status label map update:
+```
+const statusLabel: Record<string, string> = {
+  setup: "Setting Up",
+  faction_draft: "Faction Draft",
+  slice_draft: "Slice Draft",
+  strategy_draft: "Strategy Draft",
+  ready: "Game Ready",
+  complete: "Completed",
+};
+```
 
-**File: `src/pages/CreateGame.tsx`** (lines ~400-407)
-- Same layout pattern as MapGenerator for map + legend side-by-side
+**File: `src/components/game/GameResultsPanel.tsx`** -- new component structure:
+- Input state: array of `{ playerId: string, placement: number | null, vp: number | null }` initialized from players list
+- Notes textarea state
+- Placement select per player (1 through playerCount)
+- VP number input per player (0-99)
+- Submit handler validates all placements are set, calls `onSubmit`
+- Uses AlertDialog for "Finalize" confirmation
+
+**File: `src/components/game/GameCompleteSummary.tsx`** -- new component:
+- Receives `players` (with placement/VP filled) and `notes`
+- Renders a standings table sorted by placement
+- Winner row highlighted with gold accent
+- Trophy icon and "Game Complete" heading
 
 ### Summary of Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/map/HexMapBoard.tsx` | Add zoom controls, remove 70vh cap, add scroll overflow wrapper |
-| `src/components/map/MapLegend.tsx` | Add `compact` prop, tighter grid layout for sidebar mode |
-| `src/pages/MapGenerator.tsx` | Side-by-side flex layout for map + legend on desktop |
-| `src/pages/CreateGame.tsx` | Same side-by-side layout |
+| `src/pages/GameLobby.tsx` | Add `complete` status, result submission handler, render new panels |
+| `src/components/game/GameResultsPanel.tsx` | New -- host form for entering placement + VP per player |
+| `src/components/game/GameCompleteSummary.tsx` | New -- read-only completed game summary with standings |
+| `src/components/game/PlayerList.tsx` | Add placement/VP to interface, show badges when complete |
+
