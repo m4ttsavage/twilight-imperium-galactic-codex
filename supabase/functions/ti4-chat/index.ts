@@ -116,27 +116,25 @@ serve(async (req) => {
     // --- Authentication ---
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "Authentication required. Please sign in to use the AI chat." }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Authentication required. Please sign in to use the AI chat." }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const supabaseClient = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
+      global: { headers: { Authorization: authHeader } },
+    });
 
     const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(
-      authHeader.replace("Bearer ", "")
+      authHeader.replace("Bearer ", ""),
     );
     if (claimsError || !claimsData?.claims) {
       console.error("Auth error:", claimsError?.message);
-      return new Response(
-        JSON.stringify({ error: "Invalid or expired session. Please sign in again." }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Invalid or expired session. Please sign in again." }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const userId = claimsData.claims.sub;
@@ -145,7 +143,7 @@ serve(async (req) => {
     // --- Rate Limiting (10 requests per 60 seconds, escalating penalties) ---
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
     // Check for repeat abuse by reading current rate limit state
@@ -164,7 +162,7 @@ serve(async (req) => {
         try {
           const { error: banError } = await serviceClient.auth.admin.updateUserById(
             userId,
-            { ban_duration: '168h' } // 7 days
+            { ban_duration: "168h" }, // 7 days
           );
           if (banError) {
             console.error(`Failed to ban user ${userId}:`, banError.message);
@@ -175,24 +173,28 @@ serve(async (req) => {
           console.error(`Error banning user ${userId}:`, banErr);
         }
         return new Response(
-          JSON.stringify({ error: "Your account has been suspended due to abuse. Contact support if you believe this is an error." }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({
+            error:
+              "Your account has been suspended due to abuse.  Take a breath, quit spamming, maybe try again in the not-so-near future.",
+          }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
       // Escalated limit: if user has already hit 20+ requests (2x normal limit), apply stricter throttle
       if (windowAge < 60 && rlState.request_count >= 20) {
         console.log(`Escalated rate limit for user: ${userId} (${rlState.request_count} requests in window)`);
-        return new Response(
-          JSON.stringify({ error: "You have been temporarily blocked due to excessive requests." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "You have been temporarily blocked due to excessive requests." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
     }
 
-    const { data: allowed, error: rlError } = await serviceClient.rpc(
-      "check_chat_rate_limit",
-      { _user_id: userId, _max_requests: 10, _window_seconds: 60 }
-    );
+    const { data: allowed, error: rlError } = await serviceClient.rpc("check_chat_rate_limit", {
+      _user_id: userId,
+      _max_requests: 10,
+      _window_seconds: 60,
+    });
 
     if (rlError) {
       console.error("Rate limit check error:", rlError.message);
@@ -201,7 +203,7 @@ serve(async (req) => {
       console.log(`Rate limited user: ${userId} (base limit of 10/60s)`);
       return new Response(
         JSON.stringify({ error: "Rate limit reached. Please wait a minute before sending another message." }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -224,46 +226,42 @@ serve(async (req) => {
       }
     }
 
-    console.log(`TI4 Chat request - User: ${userId}, Faction: ${faction || "none"}, Opponents: ${opponents?.join(", ") || "none"}, Messages: ${messages.length}`);
-
-    const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            { role: "system", content: contextualSystem },
-            ...messages,
-          ],
-          stream: true,
-        }),
-      }
+    console.log(
+      `TI4 Chat request - User: ${userId}, Faction: ${faction || "none"}, Opponents: ${opponents?.join(", ") || "none"}, Messages: ${messages.length}`,
     );
+
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [{ role: "system", content: contextualSystem }, ...messages],
+        stream: true,
+      }),
+    });
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please wait a moment and try again." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please wait a moment and try again." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
       if (response.status === 402) {
         return new Response(
           JSON.stringify({ error: "AI usage credits exhausted. Please add credits in your workspace settings." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      return new Response(
-        JSON.stringify({ error: "AI service error. Please try again." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "AI service error. Please try again." }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(response.body, {
@@ -271,9 +269,9 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("TI4 chat error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
