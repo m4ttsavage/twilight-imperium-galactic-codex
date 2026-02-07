@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Gamepad2, Share2, Check, Copy, Users, LogIn, Trash2, RotateCcw, ClipboardCopy } from "lucide-react";
+import { Gamepad2, Share2, Check, Copy, Users, LogIn, Trash2, RotateCcw, ClipboardCopy, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { parseMapString, type GeneratedMap } from "@/lib/map-data";
 import { resolveRankedChoiceDraft, generateDraftOrder, getSnakeOrder, type FateMessage as FateMessageType } from "@/lib/draft-resolver";
+import { generateGameName } from "@/lib/game-names";
 import HexMapBoard from "@/components/map/HexMapBoard";
 import PlayerList, { type GamePlayerInfo } from "@/components/game/PlayerList";
 import FactionDraftPanel from "@/components/game/FactionDraftPanel";
@@ -165,6 +166,22 @@ const GameLobby = () => {
       toast.success("Map string copied to clipboard");
       setTimeout(() => setCopiedMap(false), 2000);
     });
+  };
+
+  // Regenerate game name (host only)
+  const handleRegenerateName = async () => {
+    if (!gameId || !game) return;
+    const newName = generateGameName();
+    const { error } = await supabase
+      .from("games")
+      .update({ name: newName } as any)
+      .eq("id", gameId);
+    if (error) {
+      toast.error("Failed to update game name");
+      return;
+    }
+    setGame((prev) => (prev ? { ...prev, name: newName } : prev));
+    toast.success("Game renamed!");
   };
 
   // Delete game (host only)
@@ -437,17 +454,30 @@ const GameLobby = () => {
                 Game Lobby
               </h1>
               <div className="flex items-center gap-2 flex-wrap">
-                {game.name && (
-                  <span className="text-[10px] font-body text-gold/80 tracking-wide italic">
-                    {game.name}
-                  </span>
-                )}
                 <span className="text-[10px] font-body text-muted-foreground tracking-wide">
                   {game.player_count} players
                 </span>
                 <span className="text-[8px] font-display uppercase tracking-wider px-1.5 py-0.5 rounded bg-gold/10 border border-gold/20 text-gold">
                   {statusLabel[game.status] || game.status}
                 </span>
+                {game.name && (
+                  <>
+                    <span className="text-muted-foreground/40">|</span>
+                    <span className="text-[9px] font-display uppercase tracking-wider text-muted-foreground">Game Name:</span>
+                    <span className="text-[10px] font-body text-gold/80 tracking-wide italic">
+                      {game.name}
+                    </span>
+                    {isHost && (
+                      <button
+                        onClick={handleRegenerateName}
+                        className="p-0.5 rounded hover:bg-gold/10 text-muted-foreground hover:text-gold transition-colors"
+                        title="Generate new name"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2">
