@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Gamepad2, Share2, Check, Copy, Users, LogIn } from "lucide-react";
+import { Gamepad2, Share2, Check, Copy, Users, LogIn, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { parseMapString, type GeneratedMap } from "@/lib/map-data";
@@ -14,6 +14,17 @@ import StrategyDraftPanel from "@/components/game/StrategyDraftPanel";
 import FateMessage from "@/components/game/FateMessage";
 import TopNav from "@/components/TopNav";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import heroBg from "@/assets/hero-bg.jpg";
 
 interface GameData {
@@ -139,6 +150,18 @@ const GameLobby = () => {
       toast.success("Game link copied!");
       setTimeout(() => setCopied(false), 2000);
     });
+  };
+
+  // Delete game (host only)
+  const handleDeleteGame = async () => {
+    if (!gameId) return;
+    const { error } = await supabase.from("games").delete().eq("id", gameId);
+    if (error) {
+      toast.error("Failed to delete game");
+    } else {
+      toast.success("Game deleted");
+      navigate("/profile");
+    }
   };
 
   // Faction draft: lock in preferences
@@ -348,13 +371,39 @@ const GameLobby = () => {
                 </span>
               </div>
             </div>
-            <button
-              onClick={handleCopyLink}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider"
-            >
-              {copied ? <Check className="w-3 h-3 text-green-400" /> : <Share2 className="w-3 h-3" />}
-              {copied ? "Copied" : "Share Link"}
-            </button>
+            <div className="flex items-center gap-2">
+              {isHost && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 transition-colors text-[10px] font-display uppercase tracking-wider">
+                      <Trash2 className="w-3 h-3" />
+                      Delete
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete this game?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete the game and all player data. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteGame} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        Delete Game
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              <button
+                onClick={handleCopyLink}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors text-[10px] font-display uppercase tracking-wider"
+              >
+                {copied ? <Check className="w-3 h-3 text-green-400" /> : <Share2 className="w-3 h-3" />}
+                {copied ? "Copied" : "Share Link"}
+              </button>
+            </div>
           </div>
         </motion.header>
 
