@@ -11,19 +11,25 @@ export interface PlayerAssignment {
   strategyCard: number;
 }
 
+export interface InitialPlayerData {
+  factionName: string;
+  playerName: string;
+}
+
 interface HostSetupPanelProps {
   playerCount: number;
+  initialData?: InitialPlayerData[];
   onAssignmentsChange: (assignments: PlayerAssignment[], valid: boolean) => void;
 }
 
 const SLICE_LABELS = "ABCDEFGH".split("");
 
-const HostSetupPanel = ({ playerCount, onAssignmentsChange }: HostSetupPanelProps) => {
+const HostSetupPanel = ({ playerCount, initialData, onAssignmentsChange }: HostSetupPanelProps) => {
   const [rows, setRows] = useState<PlayerAssignment[]>(() =>
-    Array.from({ length: playerCount }, () => ({
-      name: "",
+    Array.from({ length: playerCount }, (_, i) => ({
+      name: initialData?.[i]?.playerName || "",
       email: "",
-      factionName: "",
+      factionName: initialData?.[i]?.factionName || "",
       sliceIndex: -1,
       strategyCard: -1,
     })),
@@ -36,18 +42,21 @@ const HostSetupPanel = ({ playerCount, onAssignmentsChange }: HostSetupPanelProp
       if (prev.length < playerCount) {
         return [
           ...prev,
-          ...Array.from({ length: playerCount - prev.length }, () => ({
-            name: "",
-            email: "",
-            factionName: "",
-            sliceIndex: -1,
-            strategyCard: -1,
-          })),
+          ...Array.from({ length: playerCount - prev.length }, (_, j) => {
+            const idx = prev.length + j;
+            return {
+              name: initialData?.[idx]?.playerName || "",
+              email: "",
+              factionName: initialData?.[idx]?.factionName || "",
+              sliceIndex: -1,
+              strategyCard: -1,
+            };
+          }),
         ];
       }
       return prev.slice(0, playerCount);
     });
-  }, [playerCount]);
+  }, [playerCount, initialData]);
 
   const validation = useMemo(() => {
     const names = rows.map((r) => r.name.trim());
@@ -76,7 +85,6 @@ const HostSetupPanel = ({ playerCount, onAssignmentsChange }: HostSetupPanelProp
     };
   }, [rows]);
 
-  // Notify parent on every change
   useEffect(() => {
     onAssignmentsChange(rows, validation.valid);
   }, [rows, validation.valid, onAssignmentsChange]);
@@ -110,9 +118,9 @@ const HostSetupPanel = ({ playerCount, onAssignmentsChange }: HostSetupPanelProp
         <p className="text-[10px] text-destructive font-body">⚠ Duplicate strategy cards selected</p>
       )}
 
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
         {rows.map((row, i) => (
-          <PlayerRow
+          <PlayerCard
             key={i}
             index={i}
             row={row}
@@ -128,7 +136,7 @@ const HostSetupPanel = ({ playerCount, onAssignmentsChange }: HostSetupPanelProp
   );
 };
 
-interface PlayerRowProps {
+interface PlayerCardProps {
   index: number;
   row: PlayerAssignment;
   playerCount: number;
@@ -138,7 +146,7 @@ interface PlayerRowProps {
   onUpdate: (index: number, field: keyof PlayerAssignment, value: string | number) => void;
 }
 
-const PlayerRow = ({
+const PlayerCard = ({
   index,
   row,
   playerCount,
@@ -146,80 +154,113 @@ const PlayerRow = ({
   usedSlices,
   usedStrategies,
   onUpdate,
-}: PlayerRowProps) => {
+}: PlayerCardProps) => {
   const sliceOptions = Array.from({ length: playerCount }, (_, i) => i);
+  const factionData = row.factionName ? TI4_FACTIONS.find((f) => f.name === row.factionName) : null;
 
   return (
-    <div className="rounded-lg border border-border bg-card/40 p-3 space-y-2">
-      <div className="flex items-center gap-2">
-        <span className="text-[9px] font-display uppercase tracking-wider text-muted-foreground w-16 shrink-0">
+    <div className="rounded-lg border border-border bg-card/40 p-2.5 space-y-1.5">
+      {/* Header */}
+      <div className="flex items-center gap-1.5 mb-1">
+        <span className="text-[9px] font-display uppercase tracking-wider text-muted-foreground">
           Player {index + 1}
         </span>
-        <input
-          type="text"
-          placeholder="Name *"
-          value={row.name}
-          onChange={(e) => onUpdate(index, "name", e.target.value)}
-          maxLength={50}
-          className="flex-1 min-w-0 h-7 px-2 rounded bg-muted/30 border border-border text-xs font-body text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-gold/40"
-        />
-        <input
-          type="email"
-          placeholder="Email (optional)"
-          value={row.email}
-          onChange={(e) => onUpdate(index, "email", e.target.value)}
-          maxLength={100}
-          className="flex-1 min-w-0 h-7 px-2 rounded bg-muted/30 border border-border text-xs font-body text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-gold/40"
-        />
+        {factionData && (
+          <img src={factionData.icon} alt={factionData.shortName} className="w-4 h-4 object-contain ml-auto" />
+        )}
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap">
-        {/* Faction select */}
-        <select
-          value={row.factionName}
-          onChange={(e) => onUpdate(index, "factionName", e.target.value)}
-          className="h-7 px-2 rounded bg-muted/30 border border-border text-[10px] font-body text-foreground focus:outline-none focus:border-gold/40 min-w-[140px]"
-        >
-          <option value="">Select Faction…</option>
-          {TI4_FACTIONS.map((f) => {
+      {/* Name */}
+      <input
+        type="text"
+        placeholder="Player name *"
+        value={row.name}
+        onChange={(e) => onUpdate(index, "name", e.target.value)}
+        maxLength={50}
+        className="w-full h-7 px-2 rounded bg-muted/30 border border-border text-xs font-body text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-gold/40"
+      />
+
+      {/* Email */}
+      <input
+        type="email"
+        placeholder="Email (optional)"
+        value={row.email}
+        onChange={(e) => onUpdate(index, "email", e.target.value)}
+        maxLength={100}
+        className="w-full h-7 px-2 rounded bg-muted/30 border border-border text-[11px] font-body text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-gold/40"
+      />
+
+      {/* Faction select */}
+      <select
+        value={row.factionName}
+        onChange={(e) => onUpdate(index, "factionName", e.target.value)}
+        className="w-full h-7 px-2 rounded bg-card border border-border text-[11px] font-body text-foreground focus:outline-none focus:border-gold/40 appearance-none cursor-pointer
+          [&>option]:bg-card [&>option]:text-foreground [&>optgroup]:font-display [&>optgroup]:text-[10px] [&>optgroup]:uppercase [&>optgroup]:tracking-wider [&>optgroup]:text-gold"
+      >
+        <option value="" className="text-muted-foreground">Select Faction…</option>
+        <optgroup label="Base Game">
+          {TI4_FACTIONS.filter((f) => f.expansion === "base").map((f) => {
             const taken = usedFactions.includes(f.name) && row.factionName !== f.name;
             return (
               <option key={f.name} value={f.name} disabled={taken}>
-                {f.shortName}{taken ? " (taken)" : ""}
+                {f.name}{taken ? " ✗" : ""}
               </option>
             );
           })}
-        </select>
+        </optgroup>
+        <optgroup label="Prophecy of Kings">
+          {TI4_FACTIONS.filter((f) => f.expansion === "pok").map((f) => {
+            const taken = usedFactions.includes(f.name) && row.factionName !== f.name;
+            return (
+              <option key={f.name} value={f.name} disabled={taken}>
+                {f.name}{taken ? " ✗" : ""}
+              </option>
+            );
+          })}
+        </optgroup>
+        <optgroup label="Thunder's Edge">
+          {TI4_FACTIONS.filter((f) => f.expansion === "te").map((f) => {
+            const taken = usedFactions.includes(f.name) && row.factionName !== f.name;
+            return (
+              <option key={f.name} value={f.name} disabled={taken}>
+                {f.name}{taken ? " ✗" : ""}
+              </option>
+            );
+          })}
+        </optgroup>
+      </select>
 
-        {/* Slice select */}
+      {/* Slice + Strategy in a row */}
+      <div className="flex gap-1.5">
         <select
           value={row.sliceIndex}
           onChange={(e) => onUpdate(index, "sliceIndex", parseInt(e.target.value, 10))}
-          className="h-7 px-2 rounded bg-muted/30 border border-border text-[10px] font-body text-foreground focus:outline-none focus:border-gold/40 min-w-[100px]"
+          className="flex-1 h-7 px-2 rounded bg-card border border-border text-[11px] font-body text-foreground focus:outline-none focus:border-gold/40 appearance-none cursor-pointer
+            [&>option]:bg-card [&>option]:text-foreground"
         >
-          <option value={-1}>Select Slice…</option>
+          <option value={-1} className="text-muted-foreground">Slice…</option>
           {sliceOptions.map((s) => {
             const taken = usedSlices.includes(s) && row.sliceIndex !== s;
             return (
               <option key={s} value={s} disabled={taken}>
-                Slice {SLICE_LABELS[s] || s}{taken ? " (taken)" : ""}
+                Slice {SLICE_LABELS[s] || s}{taken ? " ✗" : ""}
               </option>
             );
           })}
         </select>
 
-        {/* Strategy card select */}
         <select
           value={row.strategyCard}
           onChange={(e) => onUpdate(index, "strategyCard", parseInt(e.target.value, 10))}
-          className="h-7 px-2 rounded bg-muted/30 border border-border text-[10px] font-body text-foreground focus:outline-none focus:border-gold/40 min-w-[140px]"
+          className="flex-1 h-7 px-2 rounded bg-card border border-border text-[11px] font-body text-foreground focus:outline-none focus:border-gold/40 appearance-none cursor-pointer
+            [&>option]:bg-card [&>option]:text-foreground"
         >
-          <option value={-1}>Select Strategy…</option>
+          <option value={-1} className="text-muted-foreground">Strategy…</option>
           {STRATEGY_CARDS.map((card) => {
             const taken = usedStrategies.includes(card.number) && row.strategyCard !== card.number;
             return (
               <option key={card.number} value={card.number} disabled={taken}>
-                {card.number}. {card.name}{taken ? " (taken)" : ""}
+                {card.number}. {card.name}{taken ? " ✗" : ""}
               </option>
             );
           })}
