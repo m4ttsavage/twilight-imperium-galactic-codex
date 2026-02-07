@@ -1,109 +1,114 @@
 
+## Show Faction Homeworld Data on Home Hexes
 
-## Add "Complete Game" Flow to the Lobby
+### Overview
 
-### Current Game Status Values
+When a faction is assigned to a home hex, replace the current "icon + name only" display with the faction's actual homeworld tile data -- showing planet names, resources, influence, and tech specialties using the same visual language as other tiles on the map.
 
-The game progresses through these statuses (stored in `games.status`):
+### The Clutter Problem
 
-| Status | Label | Meaning |
-|--------|-------|---------|
-| `setup` | Setting Up | Host is configuring the game, players joining |
-| `faction_draft` | Faction Draft | Players submit ranked faction preferences |
-| `slice_draft` | Slice Draft | Players pick map slices in draft order |
-| `strategy_draft` | Strategy Draft | Players pick strategy cards in snake order |
-| `ready` | Game Ready | All drafting complete, game can begin on the table |
+The hex size is 38px. Currently, assigned home hexes show:
+- Player nickname (top)
+- Faction icon (24x24 center)
+- Faction short name (below icon)
+- Slice R/I stats badge (bottom edge)
 
-There is **no "completed" status** yet. The `game_players` table already has `placement` (integer) and `victory_points` (integer) columns, but they are never populated from the lobby -- they're only displayed on the Profile page's history cards.
+Adding homeworld planets (1-3 planets per faction) into this space would overcrowd it. To solve this:
 
----
+1. **Remove the slice R/I stats badge from home hexes** and move those stats to a slice summary displayed outside the map (a compact row below the map or in the sidebar).
+2. **Shrink the faction icon** slightly to make room for planet info.
+3. **Show homeworld planets** in a compact layout below the faction identity, using the existing `HexTileGraphics` planet rendering style but adapted for the tighter space.
 
-### What This Plan Adds
+### Data Addition: Faction Homeworld Mapping
 
-1. **A new `complete` status** for games that have finished being played
-2. **A "Complete Game" button** on the lobby page (host-only), visible when the game is in `ready` status
-3. **A results entry form** where the host can enter each player's final placement and victory points, plus optional game notes
-4. **A completed game summary view** shown to all players when the game status is `complete`
-5. **Updated status label** in the lobby header badge
+A new data file (`src/lib/faction-homeworlds.ts`) will map each faction name to its homeworld `SystemTile`. This is canonical TI4 data. For example:
 
----
+- The Arborec: Nestphar (2R/1I)
+- The Federation of Sol: Jord (4R/2I)
+- The Xxcha Kingdom: Archon Ren (2R/3I) + Archon Tau (1R/1I)
+- The Titans of Ul: Elysium (4R/1I)
 
-### Detailed Changes
+Each faction has 1-3 homeworld planets with known resources, influence, and optional tech specialties.
 
-**File: `src/pages/GameLobby.tsx`**
+### Layout Changes on Home Hexes
 
-- Add `complete` to the `statusLabel` map: `complete: "Completed"`
-- Import the new `GameResultsPanel` component
-- Add a `handleCompleteGame` function that:
-  - Receives an array of `{ playerId, placement, victoryPoints }` and optional notes
-  - Updates each `game_player` row with `placement` and `victory_points`
-  - Updates the `games` row with `status: "complete"` and optionally `notes`
-- In the sidebar, when `game.status === "ready"` and `isHost`, show a "Complete Game" button that reveals the results entry form
-- When `game.status === "complete"`, show the completed game summary (replaces the "Game Ready" panel)
+When a faction is assigned, the home hex will show:
 
-**New file: `src/components/game/GameResultsPanel.tsx`**
-
-A host-only form for entering post-game results:
-- Lists each player with their faction icon and nickname
-- For each player: a placement dropdown (1st through Nth) and a VP number input
-- A text area for optional game notes
-- Validation: all placements must be filled, no duplicate placements (ties allowed optionally)
-- A "Finalize Results" button with a confirmation dialog (results are permanent)
-- Props: `players`, `onSubmit(results, notes)`
-
-**New file: `src/components/game/GameCompleteSummary.tsx`**
-
-A read-only summary panel shown to everyone when game status is `complete`:
-- Shows a standings table (sorted by placement) with faction, player name, and VP
-- Shows game notes if present
-- Similar visual style to the standings table in `GameHistoryCard`
-- Trophy icon for the winner
-
-**File: `src/components/game/PlayerList.tsx`**
-
-- Add `placement` and `victory_points` to the `GamePlayerInfo` interface
-- When game status is `complete`, show placement badge and VP next to each player
-
----
-
-### Technical Details
-
-**Database:** No schema changes needed. The `game_players` table already has `placement` (integer, nullable) and `victory_points` (integer, nullable) columns. The `games` table already has `notes` (text, nullable) and `status` (text) columns that accept any string value.
-
-**RLS:** No policy changes needed. The existing "Host can update their own game" policy covers updating status and notes. The "Hosts can update their game players" and "Players can update own draft picks" policies cover updating placement/VP.
-
-**File: `src/pages/GameLobby.tsx`** -- status label map update:
-```
-const statusLabel: Record<string, string> = {
-  setup: "Setting Up",
-  faction_draft: "Faction Draft",
-  slice_draft: "Slice Draft",
-  strategy_draft: "Strategy Draft",
-  ready: "Game Ready",
-  complete: "Completed",
-};
+```text
++-------------------+
+|  [Nickname]       |  (if set, small text)
+|  [Faction Icon]   |  (shrunk to ~18x18)
+|  [Short Name]     |  (small text)
+|  ● Planet 3/1     |  (homeworld planets, compact)
+|  ● Planet 2/2     |  (using colored dots like other tiles)
++-------------------+
 ```
 
-**File: `src/components/game/GameResultsPanel.tsx`** -- new component structure:
-- Input state: array of `{ playerId: string, placement: number | null, vp: number | null }` initialized from players list
-- Notes textarea state
-- Placement select per player (1 through playerCount)
-- VP number input per player (0-99)
-- Submit handler validates all placements are set, calls `onSubmit`
-- Uses AlertDialog for "Finalize" confirmation
+For multi-planet homeworlds (2-3 planets), a compact stacked layout similar to the existing `TwoPlanetContent` / `ThreePlanetContent` but at a smaller scale.
 
-**File: `src/components/game/GameCompleteSummary.tsx`** -- new component:
-- Receives `players` (with placement/VP filled) and `notes`
-- Renders a standings table sorted by placement
-- Winner row highlighted with gold accent
-- Trophy icon and "Game Complete" heading
+### Slice Stats Relocation
 
-### Summary of Files Changed
+The R/I totals currently shown on each home hex will be moved to the `SlicePanel` component (already exists in the sidebar for the map generator) or rendered as a compact summary row below the map in the lobby/profile views.
+
+### Map Legend on Lobby and Profile Pages
+
+The `MapLegend` component (currently only used on Map Generator and Create Game pages) will also be added to:
+- **GameLobby** (`src/pages/GameLobby.tsx`): Below the map, inside the map container
+- **GameDetailView** (`src/components/GameDetailView.tsx`): Below the map in the profile page's expanded game cards
+
+---
+
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/pages/GameLobby.tsx` | Add `complete` status, result submission handler, render new panels |
-| `src/components/game/GameResultsPanel.tsx` | New -- host form for entering placement + VP per player |
-| `src/components/game/GameCompleteSummary.tsx` | New -- read-only completed game summary with standings |
-| `src/components/game/PlayerList.tsx` | Add placement/VP to interface, show badges when complete |
+| `src/lib/faction-homeworlds.ts` | **New** -- Map of all 30 faction names to their homeworld `SystemTile` data (planets, R/I, tech) |
+| `src/components/map/HexMapBoard.tsx` | Look up homeworld tile for assigned factions; pass to `HexTileGraphics` instead of returning `null` for home hexes; remove the R/I stats badge from home hexes; shrink faction icon; add compact planet display |
+| `src/components/map/HexTileGraphics.tsx` | Add a new rendering mode for home-system tiles: accepts a `homeTile` prop and renders planets at a smaller scale alongside the faction identity |
+| `src/pages/GameLobby.tsx` | Import and render `MapLegend` below the map |
+| `src/components/GameDetailView.tsx` | Import and render `MapLegend` below the map |
+| `src/components/map/MapLegend.tsx` | No changes needed |
 
+### Technical Details
+
+**`src/lib/faction-homeworlds.ts`** structure:
+```typescript
+import type { SystemTile } from "./map-data";
+
+export const FACTION_HOMEWORLDS: Record<string, SystemTile> = {
+  "The Arborec": {
+    id: 5001, name: "Nestphar", resources: 2, influence: 1,
+    type: "planet",
+  },
+  "The Federation of Sol": {
+    id: 5006, name: "Jord", resources: 4, influence: 2,
+    type: "planet",
+  },
+  "The Xxcha Kingdom": {
+    id: 5015, name: "Archon Ren / Archon Tau",
+    resources: 3, influence: 4, type: "planet",
+    planets: [
+      { name: "Archon Ren", resources: 2, influence: 3 },
+      { name: "Archon Tau", resources: 1, influence: 1 },
+    ],
+  },
+  // ... all 30 factions
+};
+```
+
+**`src/components/map/HexMapBoard.tsx`** changes:
+- Import `FACTION_HOMEWORLDS` from the new data file
+- When rendering home hex with faction assigned: look up `FACTION_HOMEWORLDS[factionName]`
+- Pass the homeworld tile to `HexTileGraphics` with a new `isHomeAssigned` flag
+- Remove the `sliceStats` R/I badge block from home hexes
+- Shrink faction icon from 24x24 to 18x18
+- Adjust text positions to accommodate planet graphics below
+
+**`src/components/map/HexTileGraphics.tsx`** changes:
+- Update the early return: instead of `if (isCenter || isHome) return null`, check `if (isCenter) return null` and handle home hexes with a new compact layout
+- Add a new prop `homeTile?: SystemTile` that provides the homeworld data
+- When `isHome && homeTile`, render a compact planet display below the faction identity area, using smaller planet graphics (radius 3-4 instead of 5-7) and smaller text
+
+**Lobby and Profile MapLegend placement:**
+- `GameLobby.tsx`: Add `<MapLegend />` inside the map container div, after the `HexMapBoard`
+- `GameDetailView.tsx`: Add `<MapLegend />` after the `HexMapBoard`, inside the map container
