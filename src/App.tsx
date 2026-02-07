@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import FactionReference from "./pages/FactionReference";
 import FactionCompare from "./pages/FactionCompare";
+import StrategyReference from "./pages/StrategyReference";
 import CreateGame from "./pages/CreateGame";
 import GameLobby from "./pages/GameLobby";
 import Auth from "./pages/Auth";
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/factions/compare" element={<FactionCompare />} />
           <Route path="/game/new" element={<CreateGame />} />
           <Route path="/game/:id" element={<GameLobby />} />
+          <Route path="/strategy" element={<StrategyReference />} />
           <Route path="/map" element={<Navigate to="/game/new" replace />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/profile" element={<Profile />} />
