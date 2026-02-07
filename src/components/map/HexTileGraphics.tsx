@@ -322,25 +322,59 @@ const HexTileGraphics = ({ tile, x, y, hexSize, isCenter, isHome, homeTile }: He
 
   // Planet tiles
   if (tile.type === "planet") {
-    // Planet on anomaly (e.g. Industrex on asteroid, Lemox in entropic scar)
     const hasAnomaly = !!tile.anomaly;
+    const hasWormhole = !!tile.wormhole;
 
+    // Side-by-side split: anomaly left, planet right
+    if (hasAnomaly && !tile.planets) {
+      const leftX = x - graphicSize * 0.32;
+      const rightX = x + graphicSize * 0.25;
+      return (
+        <g>
+          {tile.anomaly === "asteroid" && <AsteroidGraphic x={leftX} y={y - 2} size={graphicSize * 0.45} />}
+          {tile.anomaly === "gravity-rift" && <GravityRiftGraphic x={leftX} y={y - 2} size={graphicSize * 0.45} />}
+          {tile.anomaly === "nebula" && <NebulaGraphic x={leftX} y={y - 2} size={graphicSize * 0.45} />}
+          {tile.anomaly === "entropic-scar" && <EntropicScarGraphic x={leftX} y={y - 2} size={graphicSize * 0.45} />}
+          <PlanetGraphic x={rightX} y={y - 4} radius={6} tech={tile.tech} />
+          <text x={rightX} y={y + 6} textAnchor="middle" fill="#ccd0dd" fontSize={4.5} fontFamily="Rajdhani" opacity={0.8}>
+            {tile.name.length > 10 ? tile.name.slice(0, 10) + "…" : tile.name}
+          </text>
+          <text x={rightX} y={y + 13} textAnchor="middle" fill="#ccd0dd" fontSize={8} fontFamily="Rajdhani" fontWeight={600}>
+            {tile.resources}/{tile.influence}
+          </text>
+          {hasWormhole && <WormholeLabel x={x} y={y + 22} wormhole={tile.wormhole!} />}
+          {tile.tech && <TechBadge x={rightX + 11} y={y - 10} tech={tile.tech} />}
+          {tileIdLabel}
+        </g>
+      );
+    }
+
+    // Multi-planet tiles with anomaly: anomaly left, planets right
+    if (hasAnomaly && tile.planets) {
+      const leftX = x - graphicSize * 0.32;
+      const rightX = x + graphicSize * 0.15;
+      return (
+        <g>
+          {tile.anomaly === "asteroid" && <AsteroidGraphic x={leftX} y={y - 2} size={graphicSize * 0.42} />}
+          {tile.anomaly === "gravity-rift" && <GravityRiftGraphic x={leftX} y={y - 2} size={graphicSize * 0.42} />}
+          {tile.anomaly === "nebula" && <NebulaGraphic x={leftX} y={y - 2} size={graphicSize * 0.42} />}
+          {tile.anomaly === "entropic-scar" && <EntropicScarGraphic x={leftX} y={y - 2} size={graphicSize * 0.42} />}
+          {tile.planets.length === 2 && <TwoPlanetContent x={rightX} y={y} planets={tile.planets} />}
+          {tile.planets.length === 3 && <ThreePlanetContent x={rightX} y={y} planets={tile.planets} />}
+          {hasWormhole && <WormholeLabel x={x} y={y + 22} wormhole={tile.wormhole!} />}
+          {tileIdLabel}
+        </g>
+      );
+    }
+
+    // Standard planet tiles (no anomaly)
     return (
       <g>
-        {/* Background anomaly graphic for planet+anomaly tiles */}
-        {hasAnomaly && tile.anomaly === "asteroid" && <AsteroidGraphic x={x} y={y} size={graphicSize * 0.5} />}
-        {hasAnomaly && tile.anomaly === "gravity-rift" && <GravityRiftGraphic x={x} y={y} size={graphicSize * 0.5} />}
-        {hasAnomaly && tile.anomaly === "nebula" && <NebulaGraphic x={x} y={y} size={graphicSize * 0.5} />}
-        {hasAnomaly && tile.anomaly === "entropic-scar" && <EntropicScarGraphic x={x} y={y} size={graphicSize * 0.5} />}
-
-        {/* Planet content */}
         {tile.planets && tile.planets.length === 2 && <TwoPlanetContent x={x} y={y} planets={tile.planets} />}
         {tile.planets && tile.planets.length === 3 && <ThreePlanetContent x={x} y={y} planets={tile.planets} />}
         {!tile.planets && <SinglePlanetContent x={x} y={y} tile={tile} />}
-
-        {/* Wormhole on multi-planet tiles */}
-        {tile.planets && tile.wormhole && (
-          <WormholeLabel x={x} y={y + (tile.planets.length === 3 ? 25 : 22)} wormhole={tile.wormhole} />
+        {tile.planets && hasWormhole && (
+          <WormholeLabel x={x} y={y + (tile.planets.length === 3 ? 25 : 22)} wormhole={tile.wormhole!} />
         )}
         {tileIdLabel}
       </g>
@@ -349,6 +383,37 @@ const HexTileGraphics = ({ tile, x, y, hexSize, isCenter, isHome, homeTile }: He
 
   // Pure anomaly tiles
   if (tile.type === "anomaly") {
+    const hasWormhole = !!tile.wormhole;
+
+    // Side-by-side: anomaly left, wormhole right
+    if (hasWormhole) {
+      const leftX = x - graphicSize * 0.3;
+      const rightX = x + graphicSize * 0.3;
+      return (
+        <g>
+          {tile.anomaly === "asteroid" && <AsteroidGraphic x={leftX} y={y - 2} size={graphicSize * 0.5} />}
+          {tile.anomaly === "supernova" && <SupernovaGraphic x={leftX} y={y - 2} size={graphicSize * 0.5} />}
+          {tile.anomaly === "gravity-rift" && <GravityRiftGraphic x={leftX} y={y - 2} size={graphicSize * 0.5} />}
+          {tile.anomaly === "nebula" && <NebulaGraphic x={leftX} y={y - 2} size={graphicSize * 0.5} />}
+          {tile.anomaly === "entropic-scar" && <EntropicScarGraphic x={leftX} y={y - 2} size={graphicSize * 0.5} />}
+          <WormholeGraphic x={rightX} y={y - 2} size={graphicSize * 0.5} type={tile.wormhole!} />
+          <text x={leftX} y={y + graphicSize * 0.65} textAnchor="middle" fill="#aa5566" fontSize={4} fontFamily="Rajdhani" fontWeight={500} opacity={0.8}>
+            {tile.anomaly === "gravity-rift" ? "Gravity Rift" :
+             tile.anomaly === "asteroid" ? "Asteroids" :
+             tile.anomaly === "supernova" ? "Supernova" :
+             tile.anomaly === "nebula" ? "Nebula" :
+             tile.anomaly === "entropic-scar" ? "Entropic Scar" :
+             tile.anomaly}
+          </text>
+          <text x={rightX} y={y + graphicSize * 0.65} textAnchor="middle" fill={tile.wormhole === "α" ? "#6699ff" : "#ff9944"} fontSize={6} fontFamily="Rajdhani" fontWeight={500}>
+            {tile.wormhole}
+          </text>
+          {tileIdLabel}
+        </g>
+      );
+    }
+
+    // Pure anomaly (no wormhole) — centered as before
     return (
       <g>
         {tile.anomaly === "asteroid" && <AsteroidGraphic x={x} y={y} size={graphicSize} />}
@@ -364,7 +429,6 @@ const HexTileGraphics = ({ tile, x, y, hexSize, isCenter, isHome, homeTile }: He
            tile.anomaly === "entropic-scar" ? "Entropic Scar" :
            tile.anomaly}
         </text>
-        {tile.wormhole && <WormholeLabel x={x} y={y + graphicSize * 1.2} wormhole={tile.wormhole} />}
         {tileIdLabel}
       </g>
     );
