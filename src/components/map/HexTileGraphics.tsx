@@ -258,7 +258,7 @@ function HomePlanetContent({ x, y, homeTile, hexSize }: { x: number; y: number; 
   ];
 
   const count = planets.length;
-  const baseY = y + hexSize * 0.15;
+  const baseY = y + hexSize * 0.45;
   const spacing = count === 1 ? 0 : count === 2 ? 9 : 7;
   const startY = baseY - (spacing * (count - 1)) / 2;
 
