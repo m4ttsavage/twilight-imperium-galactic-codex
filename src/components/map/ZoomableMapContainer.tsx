@@ -1,19 +1,44 @@
-import { useState, useCallback, useRef, type ReactNode } from "react";
+import { useState, useCallback, useRef, useEffect, type ReactNode } from "react";
 import { Plus, Minus, RotateCcw } from "lucide-react";
 
 interface ZoomableMapContainerProps {
   children: ReactNode;
+  defaultZoom?: number;
 }
 
-const MIN_ZOOM = 0.5;
+const MIN_ZOOM = 0.3;
 const MAX_ZOOM = 2.5;
 const ZOOM_STEP = 0.15;
 
-const ZoomableMapContainer = ({ children }: ZoomableMapContainerProps) => {
-  const [zoom, setZoom] = useState(1);
+const ZoomableMapContainer = ({ children, defaultZoom }: ZoomableMapContainerProps) => {
+  const [zoom, setZoom] = useState(defaultZoom ?? 1);
+  const [autoZoom, setAutoZoom] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const clampZoom = (z: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
+
+  // Auto-fit: measure content vs container width on mount
+  useEffect(() => {
+    if (defaultZoom != null) return; // skip if explicit default
+    const container = containerRef.current;
+    const content = contentRef.current;
+    if (!container || !content) return;
+
+    const measure = () => {
+      const containerWidth = container.clientWidth - 16; // padding
+      const contentWidth = content.scrollWidth;
+      if (contentWidth > 0 && containerWidth > 0) {
+        const fitZoom = clampZoom(containerWidth / contentWidth);
+        setZoom(fitZoom);
+        setAutoZoom(fitZoom);
+      }
+    };
+
+    // Small delay for layout to settle
+    const timer = setTimeout(measure, 100);
+    return () => clearTimeout(timer);
+  }, [defaultZoom]);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
@@ -25,7 +50,7 @@ const ZoomableMapContainer = ({ children }: ZoomableMapContainerProps) => {
 
   const zoomIn = () => setZoom((prev) => clampZoom(prev + ZOOM_STEP));
   const zoomOut = () => setZoom((prev) => clampZoom(prev - ZOOM_STEP));
-  const resetZoom = () => setZoom(1);
+  const resetZoom = () => setZoom(autoZoom ?? defaultZoom ?? 1);
 
   return (
     <div className="relative rounded-xl border border-border bg-card/40 overflow-hidden">
@@ -65,6 +90,7 @@ const ZoomableMapContainer = ({ children }: ZoomableMapContainerProps) => {
         onWheel={handleWheel}
       >
         <div
+          ref={contentRef}
           style={{
             transform: `scale(${zoom})`,
             transformOrigin: "top center",
