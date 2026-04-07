@@ -526,9 +526,26 @@ const GameLobby = () => {
 
         {/* Main content */}
         <div className="flex-1 overflow-y-auto px-4 lg:px-8 pb-6">
-          {/* Standings above the board when game is complete */}
-          {game.status === "complete" && (
-            <div className="mb-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Left: Map */}
+            <div className="flex-1 min-w-0 order-2 lg:order-1">
+              {parsedMap && (
+                <div className="space-y-2">
+                  <ZoomableMapContainer>
+                    <HexMapBoard
+                      map={parsedMap}
+                      sliceFactions={sliceFactions}
+                      sliceNicknames={sliceNicknames}
+                    />
+                  </ZoomableMapContainer>
+                  <MapLegend />
+                </div>
+              )}
+            </div>
+
+            {/* Right: Sidebar — shows first on mobile (order-1), second on lg (order-2) */}
+            <div className="w-full lg:w-80 space-y-4 order-1 lg:order-2">
+              {/* Player list / standings */}
               <PlayerList
                 players={players}
                 hostId={game.user_id}
@@ -538,40 +555,6 @@ const GameLobby = () => {
                 playerCount={game.player_count}
                 notes={game.notes}
               />
-            </div>
-          )}
-
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Left: Map */}
-            <div className="flex-1 min-w-0">
-              {parsedMap && (
-                <div className="space-y-2">
-                  <div className="rounded-xl border border-border bg-card/40 p-2 overflow-hidden">
-                    <HexMapBoard
-                      map={parsedMap}
-                      sliceFactions={sliceFactions}
-                      sliceNicknames={sliceNicknames}
-                    />
-                  </div>
-                  <MapLegend />
-                </div>
-              )}
-            </div>
-
-            {/* Right: Sidebar */}
-            <div className="w-full lg:w-80 space-y-4">
-              {/* Player list (non-complete states only; complete is shown above the board) */}
-              {game.status !== "complete" && (
-                <PlayerList
-                  players={players}
-                  hostId={game.user_id}
-                  currentUserId={user?.id || null}
-                  gameStatus={game.status}
-                  currentTurnPlayerId={currentTurnPlayerId}
-                  playerCount={game.player_count}
-                  notes={game.notes}
-                />
-              )}
 
               {/* Join button for non-participants */}
               {isAnon && (
