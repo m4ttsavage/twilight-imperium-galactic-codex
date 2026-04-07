@@ -552,6 +552,7 @@ const GameLobby = () => {
                 gameStatus={game.status}
                 currentTurnPlayerId={currentTurnPlayerId}
                 playerCount={game.player_count}
+                notes={game.notes}
               />
 
               {/* Join button for non-participants */}
