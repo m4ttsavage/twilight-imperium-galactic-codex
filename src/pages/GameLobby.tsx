@@ -8,6 +8,7 @@ import { parseMapString, type GeneratedMap } from "@/lib/map-data";
 import { resolveRankedChoiceDraft, generateDraftOrder, getSnakeOrder, type FateMessage as FateMessageType } from "@/lib/draft-resolver";
 import { generateGameName } from "@/lib/game-names";
 import HexMapBoard from "@/components/map/HexMapBoard";
+import ZoomableMapContainer from "@/components/map/ZoomableMapContainer";
 import PlayerList, { type GamePlayerInfo } from "@/components/game/PlayerList";
 import FactionDraftPanel from "@/components/game/FactionDraftPanel";
 import SliceDraftPanel from "@/components/game/SliceDraftPanel";
