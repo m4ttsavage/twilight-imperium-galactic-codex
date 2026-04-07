@@ -14,7 +14,7 @@ import SliceDraftPanel from "@/components/game/SliceDraftPanel";
 import StrategyDraftPanel from "@/components/game/StrategyDraftPanel";
 import FateMessage from "@/components/game/FateMessage";
 import GameResultsPanel from "@/components/game/GameResultsPanel";
-import GameCompleteSummary from "@/components/game/GameCompleteSummary";
+// GameCompleteSummary removed — standings now shown inline in PlayerList
 import MapLegend from "@/components/map/MapLegend";
 import TopNav from "@/components/TopNav";
 import { toast } from "sonner";
@@ -552,6 +552,7 @@ const GameLobby = () => {
                 gameStatus={game.status}
                 currentTurnPlayerId={currentTurnPlayerId}
                 playerCount={game.player_count}
+                notes={game.notes}
               />
 
               {/* Join button for non-participants */}
@@ -651,22 +652,14 @@ const GameLobby = () => {
                 </div>
               )}
 
-              {game.status === "complete" && (
-                <div className="space-y-3">
-                  <GameCompleteSummary
-                    players={players}
-                    notes={game.notes}
-                  />
-                  {isHost && (
-                    <button
-                      onClick={handleRevertToReady}
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-muted/20 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors text-[10px] font-display uppercase tracking-wider"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                      Revert to In Progress
-                    </button>
-                  )}
-                </div>
+              {game.status === "complete" && isHost && (
+                <button
+                  onClick={handleRevertToReady}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-muted/20 border border-border text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors text-[10px] font-display uppercase tracking-wider"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Revert to In Progress
+                </button>
               )}
             </div>
           </div>

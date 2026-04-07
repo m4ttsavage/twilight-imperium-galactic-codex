@@ -1,4 +1,4 @@
-import { User, Crown, Clock, Check } from "lucide-react";
+import { User, Crown, Clock, Check, Trophy, ScrollText } from "lucide-react";
 import { TI4_FACTIONS } from "@/lib/factions";
 import { STRATEGY_CARDS } from "@/lib/strategy-cards";
 
@@ -22,7 +22,11 @@ interface Props {
   gameStatus: string;
   currentTurnPlayerId?: string | null;
   playerCount: number;
+  notes?: string | null;
 }
+
+const placementLabel = (n: number) =>
+  n === 1 ? "1st" : n === 2 ? "2nd" : n === 3 ? "3rd" : `${n}th`;
 
 const PlayerList = ({
   players,
@@ -31,21 +35,30 @@ const PlayerList = ({
   gameStatus,
   currentTurnPlayerId,
   playerCount,
+  notes,
 }: Props) => {
   const emptySlots = Math.max(0, playerCount - players.length);
+  const isComplete = gameStatus === "complete";
+
+  const sortedPlayers = isComplete
+    ? [...players].sort((a, b) => (a.placement ?? 99) - (b.placement ?? 99))
+    : players;
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-2">
+        {isComplete && <Trophy className="w-3.5 h-3.5 text-gold" />}
         <span className="text-[9px] font-display uppercase tracking-widest text-muted-foreground">
-          Players
+          {isComplete ? "Final Standings" : "Players"}
         </span>
-        <span className="text-[9px] font-body text-muted-foreground">
-          ({players.length}/{playerCount})
-        </span>
+        {!isComplete && (
+          <span className="text-[9px] font-body text-muted-foreground">
+            ({players.length}/{playerCount})
+          </span>
+        )}
       </div>
 
-      {players.map((p) => {
+      {sortedPlayers.map((p) => {
         const isHost = p.player_user_id === hostId;
         const isCurrentUser = p.player_user_id === currentUserId;
         const isCurrentTurn = p.player_user_id === currentTurnPlayerId;
@@ -55,20 +68,37 @@ const PlayerList = ({
         const strategy = p.strategy_card
           ? STRATEGY_CARDS.find((s) => s.number === p.strategy_card)
           : null;
+        const isWinner = isComplete && p.placement === 1;
 
         return (
           <div
             key={p.id}
             className={`flex items-center gap-2 rounded-lg border p-2 transition-all ${
-              isCurrentTurn
-                ? "border-gold/40 bg-gold/10 ring-1 ring-gold/20"
-                : isCurrentUser
-                  ? "border-teal/30 bg-teal/5"
-                  : "border-border bg-muted/10"
+              isWinner
+                ? "border-gold/40 bg-gold/10"
+                : isCurrentTurn
+                  ? "border-gold/40 bg-gold/10 ring-1 ring-gold/20"
+                  : isCurrentUser
+                    ? "border-teal/30 bg-teal/5"
+                    : "border-border bg-muted/10"
             }`}
           >
-            {/* Avatar / faction icon */}
-            {faction ? (
+            {/* Placement badge (complete) or avatar/faction icon */}
+            {isComplete && p.placement !== null ? (
+              <div
+                className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-display uppercase tracking-wider flex-shrink-0 ${
+                  isWinner
+                    ? "bg-gold/20 text-gold border border-gold/30"
+                    : "bg-muted/20 text-muted-foreground border border-border"
+                }`}
+              >
+                {isWinner ? (
+                  <Trophy className="w-3.5 h-3.5" />
+                ) : (
+                  placementLabel(p.placement)
+                )}
+              </div>
+            ) : faction ? (
               <img
                 src={faction.icon}
                 alt={faction.shortName}
@@ -78,6 +108,15 @@ const PlayerList = ({
               <div className="w-6 h-6 rounded-md bg-muted/30 flex items-center justify-center">
                 <User className="w-3.5 h-3.5 text-muted-foreground" />
               </div>
+            )}
+
+            {/* Faction icon (shown separately when complete, since placement takes the lead spot) */}
+            {isComplete && faction && (
+              <img
+                src={faction.icon}
+                alt={faction.shortName}
+                className="w-5 h-5 rounded object-contain flex-shrink-0"
+              />
             )}
 
             {/* Name + info */}
@@ -99,7 +138,7 @@ const PlayerList = ({
                     {faction.shortName}
                   </span>
                 )}
-                {strategy && (
+                {!isComplete && strategy && (
                   <span
                     className="text-[8px] font-display uppercase tracking-wider px-1 py-0.5 rounded"
                     style={{
@@ -113,25 +152,25 @@ const PlayerList = ({
               </div>
             </div>
 
-            {/* Status indicator */}
-            {gameStatus === "complete" && p.placement !== null && (
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <span className={`text-[9px] font-display uppercase tracking-wider px-1 py-0.5 rounded ${
-                  p.placement === 1
-                    ? "bg-gold/20 text-gold border border-gold/30"
-                    : "bg-muted/20 text-muted-foreground border border-border"
-                }`}>
-                  {p.placement === 1 ? "1st" : p.placement === 2 ? "2nd" : p.placement === 3 ? "3rd" : `${p.placement}th`}
+            {/* VP (complete) or status indicators */}
+            {isComplete && (
+              <div className="text-right flex-shrink-0">
+                <span
+                  className={`text-[11px] font-display tracking-wider ${
+                    isWinner ? "text-gold" : "text-foreground"
+                  }`}
+                >
+                  {p.victory_points ?? "—"}
                 </span>
-                <span className="text-[8px] font-body text-muted-foreground">
-                  {p.victory_points ?? 0}VP
+                <span className="text-[8px] font-body text-muted-foreground ml-0.5">
+                  VP
                 </span>
               </div>
             )}
-            {gameStatus !== "complete" && isCurrentTurn && (
+            {!isComplete && isCurrentTurn && (
               <Clock className="w-3.5 h-3.5 text-gold animate-pulse flex-shrink-0" />
             )}
-            {gameStatus !== "complete" && !isCurrentTurn && gameStatus === "faction_draft" && p.faction_locked && (
+            {!isComplete && !isCurrentTurn && gameStatus === "faction_draft" && p.faction_locked && (
               <Check className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
             )}
           </div>
@@ -139,7 +178,7 @@ const PlayerList = ({
       })}
 
       {/* Empty slots */}
-      {Array.from({ length: emptySlots }, (_, i) => (
+      {!isComplete && Array.from({ length: emptySlots }, (_, i) => (
         <div
           key={`empty-${i}`}
           className="flex items-center gap-2 rounded-lg border border-dashed border-border/50 p-2"
@@ -152,6 +191,21 @@ const PlayerList = ({
           </span>
         </div>
       ))}
+
+      {/* Game notes (complete only) */}
+      {isComplete && notes && (
+        <div className="rounded-lg border border-border bg-muted/10 p-3 space-y-1 mt-2">
+          <div className="flex items-center gap-1.5">
+            <ScrollText className="w-3 h-3 text-muted-foreground" />
+            <span className="text-[9px] font-display uppercase tracking-widest text-muted-foreground">
+              Game Notes
+            </span>
+          </div>
+          <p className="text-[10px] font-body text-foreground/80 whitespace-pre-wrap">
+            {notes}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
