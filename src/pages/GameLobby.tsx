@@ -525,6 +525,21 @@ const GameLobby = () => {
 
         {/* Main content */}
         <div className="flex-1 overflow-y-auto px-4 lg:px-8 pb-6">
+          {/* Standings above the board when game is complete */}
+          {game.status === "complete" && (
+            <div className="mb-4">
+              <PlayerList
+                players={players}
+                hostId={game.user_id}
+                currentUserId={user?.id || null}
+                gameStatus={game.status}
+                currentTurnPlayerId={currentTurnPlayerId}
+                playerCount={game.player_count}
+                notes={game.notes}
+              />
+            </div>
+          )}
+
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Left: Map */}
             <div className="flex-1 min-w-0">
@@ -544,16 +559,18 @@ const GameLobby = () => {
 
             {/* Right: Sidebar */}
             <div className="w-full lg:w-80 space-y-4">
-              {/* Player list */}
-              <PlayerList
-                players={players}
-                hostId={game.user_id}
-                currentUserId={user?.id || null}
-                gameStatus={game.status}
-                currentTurnPlayerId={currentTurnPlayerId}
-                playerCount={game.player_count}
-                notes={game.notes}
-              />
+              {/* Player list (non-complete states only; complete is shown above the board) */}
+              {game.status !== "complete" && (
+                <PlayerList
+                  players={players}
+                  hostId={game.user_id}
+                  currentUserId={user?.id || null}
+                  gameStatus={game.status}
+                  currentTurnPlayerId={currentTurnPlayerId}
+                  playerCount={game.player_count}
+                  notes={game.notes}
+                />
+              )}
 
               {/* Join button for non-participants */}
               {isAnon && (
