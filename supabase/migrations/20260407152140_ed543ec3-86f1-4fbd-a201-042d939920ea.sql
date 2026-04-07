@@ -1,0 +1,2 @@
+ALTER TABLE public.games DROP CONSTRAINT check_status_valid;
+ALTER TABLE public.games ADD CONSTRAINT check_status_valid CHECK (status = ANY (ARRAY['setup'::text, 'faction_draft'::text, 'slice_draft'::text, 'strategy_draft'::text, 'ready'::text, 'complete'::text]));
