@@ -1,4 +1,4 @@
-import { User, Crown, Clock, Check } from "lucide-react";
+import { User, Crown, Clock, Check, Trophy, ScrollText } from "lucide-react";
 import { TI4_FACTIONS } from "@/lib/factions";
 import { STRATEGY_CARDS } from "@/lib/strategy-cards";
 
@@ -22,6 +22,7 @@ interface Props {
   gameStatus: string;
   currentTurnPlayerId?: string | null;
   playerCount: number;
+  notes?: string | null;
 }
 
 const PlayerList = ({
